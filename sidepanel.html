@@ -1,0 +1,1394 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <title>Backlog Quick Add</title>
+    <link
+      rel="stylesheet"
+      href="vendor/select2.min.css"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          sans-serif;
+        margin: 0;
+      }
+      body {
+        font-family: system-ui;
+        padding: 12px;
+      }
+      /* ポップアップモード: 幅が狭い場合は適切な幅を設定 */
+      html.popup-mode {
+        min-width: 500px;
+        max-width: 600px;
+        width: 500px;
+      }
+      body.popup-mode {
+        min-width: 500px;
+        max-width: 600px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      /* ポップアップモード: 主要なコンテナ要素にも幅を確保 */
+      body.popup-mode header,
+      body.popup-mode #contentArea {
+        min-width: 0;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      /* サイドパネルモード: 幅は制限しない */
+      html:not(.popup-mode),
+      body:not(.popup-mode) {
+        min-width: auto;
+        max-width: none;
+        width: auto;
+      }
+      /* 通常入力と同じ見た目にする */
+      .select2-container--default .select2-selection--single {
+        height: 35px; /* 他inputと合わせる */
+        border: 1px solid rgba(127, 127, 127, 0.35); /* 通常inputと同じ */
+        border-radius: 10px; /* 同じradius */
+        padding: 8px 10px;
+        display: flex;
+        align-items: center;
+      }
+
+      /* テキスト位置調整 */
+      .select2-container--default .select2-selection__rendered {
+        line-height: normal;
+        padding-left: 0;
+      }
+
+      /* 矢印位置調整 */
+      .select2-container--default
+        .select2-selection--single
+        .select2-selection__arrow {
+        height: 100%;
+      }
+
+      /* クリアボタン（✕）のスタイル調整 */
+      .select2-container--default .select2-selection__clear {
+        font-size: 18px;
+        line-height: 1;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 8px;
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+      }
+
+      .select2-container--default .select2-selection__clear:hover {
+        opacity: 1;
+      }
+
+      /* クリアボタンを矢印の左に配置 */
+      .select2-container--default .select2-selection--single {
+        position: relative;
+      }
+
+      .select2-container--default .select2-selection--single .select2-selection__rendered {
+        padding-right: 60px; /* クリアボタンと矢印のスペースを確保 */
+      }
+
+      .select2-container--default .select2-selection--single .select2-selection__clear {
+        position: absolute;
+        right: 30px; /* 矢印の左に配置 */
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
+      header {
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+      }
+      header h1 {
+        font-size: 14px;
+        margin: 0 0 4px;
+      }
+      header p {
+        font-size: 12px;
+        margin: 0;
+        opacity: 0.75;
+      }
+      main {
+        padding: 12px 14px;
+        display: grid;
+        gap: 10px;
+      }
+      label {
+        font-size: 12px;
+        opacity: 0.85;
+        display: grid;
+        gap: 6px;
+      }
+      input,
+      select,
+      textarea,
+      button {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid rgba(127, 127, 127, 0.35);
+        background: transparent;
+        font-size: 13px;
+      }
+      textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .hint {
+        font-size: 12px;
+        opacity: 0.75;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(127, 127, 127, 0.35);
+        font-size: 12px;
+        opacity: 0.9;
+      }
+      .pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 6px;
+      }
+      button {
+        cursor: pointer;
+      }
+      button.primary {
+        border: none;
+      }
+      .muted {
+        opacity: 0.7;
+      }
+      .divider {
+        height: 1px;
+        background: rgba(127, 127, 127, 0.25);
+        margin: 6px 0;
+      }
+    </style>
+    <style>
+      .editorCard {
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+      }
+      .editorMain {
+        padding: 10px;
+      }
+      .editorTextarea {
+        width: 100%;
+        min-height: 240px;
+        resize: vertical;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 13px;
+        box-sizing: border-box;
+      }
+      .editorPreview {
+        width: 100%;
+        min-height: 240px;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        border-radius: 8px;
+        padding: 10px;
+        box-sizing: border-box;
+        overflow: auto;
+        background: #fafafa;
+        font-size: 13px;
+      }
+      /* チェックリストの装飾 */
+      .editorPreview ul li:has(input[type="checkbox"]),
+      .editorPreview ol li:has(input[type="checkbox"]) {
+        list-style: none;
+        margin-left: -1.5em;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .editorPreview ul li:has(input[type="checkbox"]) input[type="checkbox"],
+      .editorPreview ol li:has(input[type="checkbox"]) input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 16px !important;
+        max-width: 16px !important;
+        height: 16px;
+        min-width: 16px;
+        margin: 2px 0 0;
+        padding: 0;
+        border: 1.5px solid rgba(0, 0, 0, 0.4);
+        border-radius: 3px;
+        background: #fff;
+        flex-shrink: 0;
+        box-sizing: border-box;
+      }
+      .editorPreview
+        ul
+        li:has(input[type="checkbox"])
+        input[type="checkbox"]:checked,
+      .editorPreview
+        ol
+        li:has(input[type="checkbox"])
+        input[type="checkbox"]:checked {
+        background-color: #1976d2;
+        border-color: #1976d2;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='white' stroke-width='2' d='M2 6l3 3 5-6'/%3E%3C/svg%3E");
+        background-size: 10px 10px;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+      /* 表の装飾 */
+      .editorPreview table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 8px 0;
+      }
+      .editorPreview th,
+      .editorPreview td {
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        padding: 6px 10px;
+        text-align: left;
+      }
+      .editorPreview th {
+        background: rgba(0, 0, 0, 0.06);
+        font-weight: 600;
+      }
+      .editorPreview tr:nth-child(even) td {
+        background: rgba(0, 0, 0, 0.02);
+      }
+      /* 見出しのスタイル */
+      .editorPreview h1 {
+        font-size: 1.8rem;
+        line-height: 2.4rem;
+        padding: 8px 0 6px;
+        border-bottom: solid 3px #4caf93;
+      }
+      .editorPreview h2 {
+        font-size: 1.5rem;
+        line-height: 2.1rem;
+        padding: 6px 0;
+        border-bottom: solid 1px #4caf93;
+      }
+      .editorPreview h3 {
+        font-size: 1.25rem;
+        line-height: 1.8rem;
+      }
+      .editorPreview h4 {
+        font-size: 1.1rem;
+        line-height: 1.6rem;
+      }
+      .editorPreview h5 {
+        font-size: 1.05rem;
+        line-height: 1.5rem;
+      }
+      .editorPreview h6 {
+        font-size: 1rem;
+        line-height: 1.4rem;
+      }
+      .editorToolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+        padding: 8px 10px;
+        background: #f7f7f7;
+      }
+      .toolbarLeft,
+      .toolbarRight {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .tb {
+        border: 1px solid rgba(0, 0, 0, 0.18);
+        background: #fff;
+        border-radius: 8px;
+        padding: 6px 8px;
+        cursor: pointer;
+        font-size: 13px;
+        line-height: 1;
+      }
+      .tb:active {
+        transform: translateY(1px);
+      }
+      .previewBtn {
+        padding: 6px 10px;
+      }
+      .fileDropZone {
+        border: 2px dashed rgba(127, 127, 127, 0.4);
+        border-radius: 8px;
+        padding: 16px;
+        background: rgba(127, 127, 127, 0.05);
+        text-align: center;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+      }
+      .fileDropZone.dragover {
+        border-color: rgba(0, 120, 200, 0.5);
+        background: rgba(0, 120, 200, 0.05);
+      }
+      .fileDropZoneText {
+        font-size: 13px;
+        color: rgba(0, 0, 0, 0.7);
+        margin-bottom: 8px;
+      }
+      .fileDropZoneHint {
+        font-size: 11px;
+        color: rgba(0, 0, 0, 0.5);
+        margin-bottom: 10px;
+      }
+      .fileSelectBtn {
+        padding: 6px 12px;
+        border: 1px solid rgba(127, 127, 127, 0.4);
+        border-radius: 6px;
+        background: #fff;
+        color: #0078c8;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .fileSelectBtn:hover {
+        background: rgba(0, 120, 200, 0.05);
+      }
+      .fileList {
+        margin-top: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .fileItem {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 10px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
+        font-size: 12px;
+        background: #fff;
+      }
+      .fileItemName {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .fileItemRemove {
+        width: 24px;
+        height: 24px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        line-height: 1;
+        color: rgba(0, 0, 0, 0.5);
+        flex-shrink: 0;
+      }
+      .fileItemRemove:hover {
+        background: rgba(0, 0, 0, 0.08);
+        color: #c00;
+      }
+
+      .mentionMenu {
+        position: fixed; /* ← absolute だと親要素次第で変になるので fixed が安定 */
+        z-index: 999999;
+        width: min(360px, calc(100vw - 24px));
+        max-height: 280px;
+        overflow: auto;
+        background: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        padding: 6px;
+      }
+
+      .mentionItem {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      .mentionItem.active {
+        background: #eef3ff;
+      }
+      .mentionText {
+        display: flex;
+        flex-direction: column;
+      }
+      .mentionName {
+        font-weight: 600;
+      }
+      .mentionSub {
+        font-size: 12px;
+        opacity: 0.7;
+      }
+      .mentionHeader {
+        padding: 6px 10px 4px;
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.55);
+      }
+
+      .editorToolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .toolbarLeft,
+      .toolbarRight {
+        display: flex;
+        flex-direction: row; /* これ重要 */
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap; /* 幅が足りないと2段になる */
+      }
+
+      .tb {
+        display: inline-flex !important; /* block化を潰す */
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        padding: 0;
+        line-height: 1;
+      }
+      .tb.previewBtn {
+        width: auto;
+        min-width: auto;
+        padding: 6px 10px;
+      }
+
+      .mentionAvatar,
+      .mentionAvatarWrap {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #dfe6ee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: #4b5563;
+        flex: 0 0 auto;
+      }
+      .mentionAvatarImg {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .apiSetupCard {
+        padding: 20px 14px;
+        margin: 0 14px;
+        display: grid;
+        gap: 12px;
+      }
+      .apiSetupTitle {
+        font-size: 18px;
+        margin: 0 0 16px;
+        font-weight: 600;
+      }
+      .apiSetupSection {
+        margin-bottom: 8px;
+      }
+      .apiSetupSection h3 {
+        font-size: 14px;
+        margin: 0 0 8px;
+        font-weight: 600;
+      }
+      .apiSetupRow {
+        display: flex;
+        gap: 8px;
+        align-items: stretch;
+      }
+      .apiSetupRow label {
+        flex: 1;
+        min-width: 0;
+      }
+      .apiSetupRow label:last-child {
+        flex: 0 0 auto;
+        width: 140px;
+      }
+      .apiSetupRow .apiSetupDotWrap {
+        flex-shrink: 0;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        align-self: flex-end;
+        opacity: 0.6;
+      }
+      .apiSetupRow .apiSetupDot {
+        line-height: 1;
+      }
+      .apiSetupDesc {
+        font-size: 12px;
+        margin: 0 0 8px;
+        opacity: 0.85;
+      }
+      .apiKeyError {
+        font-size: 12px;
+        color: #c00;
+        margin: 0;
+      }
+      /* 初回表示時、APIキー未設定の間はタスクフォームを確実に非表示 */
+      #mainForm.hide-until-ready {
+        display: none !important;
+      }
+      .topNotification {
+        padding: 10px 14px;
+        margin: 12px 14px 10px;
+        border-radius: 8px;
+        font-size: 13px;
+      }
+      .topNotification.success {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .topNotification.error {
+        background: #ffebee;
+        color: #c62828;
+      }
+      @media (prefers-color-scheme: dark) {
+        .topNotification.success {
+          background: rgba(46, 125, 50, 0.3);
+          color: #81c784;
+        }
+        .topNotification.error {
+          background: rgba(198, 40, 40, 0.3);
+          color: #e57373;
+        }
+      }
+      .topNotification a {
+        color: inherit;
+        text-decoration: underline;
+      }
+      .btnSubmit {
+        background: #1976d2 !important;
+        color: #fff !important;
+        border: none !important;
+      }
+      .btnSubmit:hover:not(:disabled) {
+        background: #1565c0 !important;
+      }
+      .settingsPanel {
+        padding: 14px;
+      }
+      .settingsSection {
+        margin-bottom: 16px;
+      }
+      .settingsSection h3 {
+        font-size: 13px;
+        margin: 0 0 8px;
+      }
+      .settingsRow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 6px 0;
+        font-size: 13px;
+      }
+      .settingsRow input[type="checkbox"] {
+        width: auto;
+      }
+      .settingsApiKeyForm {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(127, 127, 127, 0.25);
+        display: grid;
+        gap: 10px;
+      }
+      .settingsApiKeyForm[hidden] {
+        display: none !important;
+      }
+      .contentArea {
+        flex: 1;
+        overflow: auto;
+      }
+      /* 設定画面表示時はタスクフォーム等を完全に非表示 */
+      body.settings-visible #mainForm,
+      body.settings-visible #apiSetup,
+      body.settings-visible #topNotification {
+        display: none !important;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      /* ---- ダークモード対応 (Select2 / リッチエディタ / サジェスト) ---- */
+      /* Select2 選択状態の文字色（メディアクエリが効かない環境でも .dark-mode で適用） */
+      html.dark-mode .select2-container--default .select2-selection__rendered,
+      html.dark-mode .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+      @media (prefers-color-scheme: dark) {
+        /* Select2 ドロップダウン・検索・結果 */
+        .select2-dropdown {
+          background-color: #2d2d2d;
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+        .select2-container--default .select2-selection--single {
+          background-color: transparent;
+          border-color: rgba(127, 127, 127, 0.35);
+        }
+        .select2-container--default .select2-selection__rendered {
+          color: rgba(255, 255, 255, 0.95) !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+          color: rgba(255, 255, 255, 0.95) !important;
+        }
+        .select2-container--default .select2-selection__clear {
+          color: rgba(255, 255, 255, 0.7) !important;
+          font-size: 18px !important;
+          line-height: 1 !important;
+          width: 24px !important;
+          height: 24px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          margin-right: 8px !important;
+          opacity: 0.6 !important;
+        }
+        .select2-container--default .select2-selection__clear:hover {
+          color: rgba(255, 255, 255, 0.95) !important;
+          opacity: 1 !important;
+        }
+        .select2-container--default .select2-selection__arrow b {
+          border-color: rgba(255, 255, 255, 0.6) transparent transparent transparent;
+        }
+        .select2-container--default.select2-container--open .select2-selection__arrow b {
+          border-color: transparent transparent rgba(255, 255, 255, 0.6) transparent;
+        }
+        .select2-search--dropdown .select2-search__field {
+          background-color: #1e1e1e;
+          border-color: rgba(255, 255, 255, 0.2);
+          color: inherit;
+        }
+        .select2-results__option {
+          color: rgba(255, 255, 255, 0.95);
+        }
+        .select2-container--default .select2-results__option[aria-selected=true] {
+          background-color: rgba(255, 255, 255, 0.15);
+          color: rgba(255, 255, 255, 0.95);
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+          background-color: #1976d2;
+          color: #fff;
+        }
+        .select2-container--default .select2-results__option[aria-disabled=true] {
+          color: rgba(255, 255, 255, 0.4);
+        }
+        .select2-container--default .select2-results__group {
+          color: rgba(255, 255, 255, 0.7);
+        }
+        /* 無効化状態の担当者セレクト（プロジェクト未選択時） */
+        .select2-container--default.select2-container--disabled .select2-selection--single {
+          background-color: rgba(255, 255, 255, 0.06) !important;
+          border-color: rgba(127, 127, 127, 0.25) !important;
+        }
+        .select2-container--default.select2-container--disabled .select2-selection--single .select2-selection__rendered,
+        .select2-container--default.select2-container--disabled .select2-selection--single .select2-selection__placeholder {
+          color: rgba(255, 255, 255, 0.45) !important;
+        }
+        .select2-container--default.select2-container--disabled .select2-selection--single .select2-selection__arrow b {
+          border-color: rgba(255, 255, 255, 0.35) transparent transparent transparent !important;
+        }
+
+        /* リッチエディタ */
+        .editorCard {
+          border-color: rgba(255, 255, 255, 0.15);
+          background: #2d2d2d;
+        }
+        .editorTextarea {
+          border-color: rgba(255, 255, 255, 0.15);
+          background: #1e1e1e;
+          color: inherit;
+        }
+        .editorPreview {
+          border-color: rgba(255, 255, 255, 0.15);
+          background: #1e1e1e;
+          color: inherit;
+        }
+        .editorPreview ul li:has(input[type="checkbox"]) input[type="checkbox"],
+        .editorPreview ol li:has(input[type="checkbox"]) input[type="checkbox"] {
+          border-color: rgba(255, 255, 255, 0.4);
+          background: #2d2d2d;
+        }
+        .editorPreview th,
+        .editorPreview td {
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+        .editorPreview th {
+          background: rgba(255, 255, 255, 0.08);
+        }
+        .editorPreview tr:nth-child(even) td {
+          background: rgba(255, 255, 255, 0.03);
+        }
+        .editorToolbar {
+          border-top-color: rgba(255, 255, 255, 0.1);
+          background: #252525;
+        }
+        .editorToolbar .tb {
+          color: rgba(255, 255, 255, 0.9);
+        }
+        .editorToolbar .tb svg {
+          fill: currentColor;
+        }
+        .tb {
+          border-color: rgba(255, 255, 255, 0.18);
+          background: #2d2d2d;
+          color: inherit;
+        }
+        .fileDropZone {
+          border-color: rgba(255, 255, 255, 0.25);
+          background: rgba(255, 255, 255, 0.03);
+        }
+        .fileDropZone.dragover {
+          border-color: rgba(25, 118, 210, 0.6);
+          background: rgba(25, 118, 210, 0.08);
+        }
+        .fileDropZoneText {
+          color: rgba(255, 255, 255, 0.8);
+        }
+        .fileDropZoneHint {
+          color: rgba(255, 255, 255, 0.5);
+        }
+        .fileSelectBtn {
+          border-color: rgba(255, 255, 255, 0.25);
+          background: #2d2d2d;
+          color: #64b5f6;
+        }
+        .fileSelectBtn:hover {
+          background: rgba(25, 118, 210, 0.15);
+        }
+        .fileItem {
+          border-color: rgba(255, 255, 255, 0.12);
+          background: #2d2d2d;
+        }
+        .fileItemRemove {
+          color: rgba(255, 255, 255, 0.5);
+        }
+        .fileItemRemove:hover {
+          background: rgba(255, 255, 255, 0.08);
+          color: #f44336;
+        }
+
+        /* メンションサジェスト */
+        .mentionMenu {
+          background: #2d2d2d;
+          border-color: rgba(255, 255, 255, 0.18);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+        .mentionItem.active {
+          background: rgba(25, 118, 210, 0.25);
+        }
+        .mentionHeader {
+          color: rgba(255, 255, 255, 0.6);
+        }
+        .mentionAvatar {
+          background: #4b5563;
+          color: rgba(255, 255, 255, 0.9);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Backlog タスク登録</h1>
+      <p
+        id="pageMeta"
+        class="muted"
+      >
+        タスクを入力してください
+      </p>
+      <p
+        id="headerLinks"
+        class="muted"
+        style="font-size: 11px; margin-top: 4px"
+        hidden
+      >
+        <a
+          href="#"
+          id="settingsLink"
+          >設定</a
+        >
+      </p>
+    </header>
+
+    <div
+      id="contentArea"
+      class="contentArea"
+    >
+      <div
+        id="topNotification"
+        class="topNotification"
+        hidden
+      ></div>
+
+      <div
+        id="apiSetup"
+        hidden
+      >
+        <div class="apiSetupCard">
+          <h2 class="apiSetupTitle" id="apiSetupTitle">初期設定</h2>
+
+          <div class="apiSetupSection">
+            <h3>スペースID</h3>
+            <div class="apiSetupRow">
+              <label>
+                スペースID
+                <input
+                  id="backlogSpaceId"
+                  type="text"
+                  autocomplete="off"
+                />
+              </label>
+              <span class="apiSetupDotWrap"><span class="apiSetupDot">.</span></span>
+              <label>
+                ドメイン
+                <select id="backlogDomain">
+                  <option value="backlog.com">backlog.com</option>
+                  <option value="backlog.jp">backlog.jp</option>
+                  <option value="backlogtool.com">backlogtool.com</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="apiSetupSection">
+            <h3>APIキー</h3>
+            <p class="apiSetupDesc">
+              Backlog APIキーを入力してください。Backlogの「個人設定」→「API」で取得できます。
+            </p>
+            <label>
+              APIキー
+              <input
+                id="apiKeyInput"
+                type="password"
+                placeholder="APIキーを入力"
+                autocomplete="off"
+              />
+            </label>
+            <p id="apiKeyError" class="apiKeyError" hidden></p>
+          </div>
+
+          <button id="apiKeySave" class="primary btnSubmit">保存</button>
+          <a
+            href="#"
+            id="apiKeyBack"
+            class="muted"
+            style="font-size: 12px; margin-top: 4px"
+            hidden
+            >← 戻る</a
+          >
+        </div>
+      </div>
+
+      <div
+        id="settingsPanel"
+        class="settingsPanel"
+        hidden
+      >
+        <div class="settingsSection">
+          <h3>APIキー</h3>
+          <p
+            class="hint muted"
+            style="margin: 0 0 8px"
+          >
+            Backlogの「個人設定」→「API」で取得したキーを設定します。
+          </p>
+          <a
+            href="#"
+            id="settingsApiKeyChange"
+            >APIキーを変更</a
+          >
+          <div
+            id="settingsApiKeyForm"
+            class="settingsApiKeyForm"
+            hidden
+          >
+            <div class="apiSetupRow">
+              <label>
+                スペースID
+                <input
+                  id="settingsBacklogSpaceId"
+                  type="text"
+                  placeholder="スペースIDを入力"
+                  autocomplete="off"
+                />
+              </label>
+              <span class="apiSetupDotWrap"><span class="apiSetupDot">.</span></span>
+              <label>
+                ドメイン
+                <select id="settingsBacklogDomain">
+                  <option value="backlog.com">backlog.com</option>
+                  <option value="backlog.jp">backlog.jp</option>
+                  <option value="backlogtool.com">backlogtool.com</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              APIキー
+              <input
+                id="settingsApiKeyInput"
+                type="password"
+                placeholder="APIキーを入力"
+                autocomplete="off"
+              />
+            </label>
+            <p
+              id="settingsApiKeyError"
+              class="apiKeyError"
+              hidden
+            ></p>
+            <button
+              type="button"
+              id="settingsApiKeySave"
+              class="primary btnSubmit"
+            >
+              保存
+            </button>
+          </div>
+        </div>
+        <div class="settingsSection">
+          <h3>プロジェクト情報</h3>
+          <p
+            id="cacheFetchedAt"
+            class="hint muted"
+            style="margin: 0 0 8px"
+          >
+            —
+          </p>
+          <button
+            type="button"
+            id="settingsRefreshProjects"
+          >
+            プロジェクト情報の更新
+          </button>
+        </div>
+        <div class="settingsSection">
+          <h3>送信後の動作</h3>
+          <label class="settingsRow">
+            <input
+              type="checkbox"
+              id="openTaskAfterSubmit"
+            />
+            送信後、作成したBacklogタスクの画面を開く
+          </label>
+          <label
+            class="settingsRow"
+            id="openInBackgroundRow"
+            style="padding-left: 24px"
+          >
+            <input
+              type="checkbox"
+              id="openTaskInBackground"
+            />
+            バックグラウンドで開く
+          </label>
+        </div>
+        <div class="settingsSection">
+          <h3>Arc ブラウザ対応</h3>
+          <p
+            class="hint muted"
+            style="margin: 0 0 8px"
+          >
+            サイドパネルが使えない場合（Arc など）は、アイコンクリックで新規タブを開くようにできます。
+          </p>
+          <p
+            class="hint muted"
+            style="margin: 0 0 8px"
+          >
+            拡張アイコンを<strong>右クリック</strong> → 「ポップパネルで開く」をクリックすると、ポップアップ表示とサイドパネル表示を切り替えられます。有効な場合はメニューにチェックマークが表示されます。
+          </p>
+          <label class="settingsRow">
+            <input
+              type="checkbox"
+              id="openInNewTab"
+            />
+            アイコンクリックで新規タブを開く
+          </label>
+        </div>
+        <div class="settingsSection">
+          <h3>開発用</h3>
+          <label class="settingsRow">
+            <input
+              type="checkbox"
+              id="debugDryRun"
+            />
+            APIを送信せずリクエストを出力する
+          </label>
+        </div>
+        <button
+          type="button"
+          id="settingsBack"
+        >
+          ← 戻る
+        </button>
+      </div>
+
+      <main
+        id="mainForm"
+        class="hide-until-ready"
+        hidden
+        style="flex: 1"
+      >
+        <div class="pills">
+          <span
+            class="pill"
+            id="aiStatus"
+            >AI推測: 開発中</span
+          >
+        </div>
+
+        <label>プロジェクト</label>
+        <select
+          id="project"
+          style="width: 100%"
+          tabindex="1"
+        >
+          <option></option>
+        </select>
+
+        <label>
+          <input
+            id="title"
+            placeholder="件名"
+            tabindex="2"
+          />
+        </label>
+
+        <label>
+          <!-- 本文 -->
+          <div class="editorCard">
+            <div class="editorMain">
+              <textarea
+                id="description"
+                class="editorTextarea"
+                placeholder="課題の詳細（@を入力してメンバーに通知）"
+                tabindex="3"
+              ></textarea>
+              <div
+                id="preview"
+                class="editorPreview"
+                hidden
+              ></div>
+              <div
+                id="mentionMenu"
+                class="mentionMenu"
+                hidden
+              ></div>
+            </div>
+
+            <div class="editorToolbar">
+              <!-- <div class="toolbarLeft">
+              <button
+                class="tb"
+                data-md="attach"
+                title="ファイル添付"
+              >
+                📎
+              </button>
+              <button
+                class="tb"
+                data-md="mention"
+                title="メンション"
+              >
+                @
+              </button>
+              <button
+                class="tb"
+                data-md="emoji"
+                title="絵文字"
+              >
+                😊
+              </button>
+            </div> -->
+
+              <div class="toolbarRight">
+                <button
+                  class="tb"
+                  data-md="bold"
+                  title="太字"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                  >
+                    <use xlink:href="images/sprite.symbol.svg#icon_bold"></use>
+                  </svg>
+                </button>
+                <button
+                  class="tb"
+                  data-md="italic"
+                  title="斜体"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                  >
+                    <use
+                      xlink:href="images/sprite.symbol.svg#icon_italic"
+                    ></use>
+                  </svg>
+                </button>
+                <button
+                  class="tb"
+                  data-md="strike"
+                  title="打ち消し"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                  >
+                    <use
+                      xlink:href="images/sprite.symbol.svg#icon_strike"
+                    ></use>
+                  </svg>
+                </button>
+
+                <button
+                  class="tb"
+                  data-md="ul"
+                  title="箇条書き"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                  >
+                    <use xlink:href="images/sprite.symbol.svg#icon_list"></use>
+                  </svg>
+                </button>
+                <button
+                  class="tb"
+                  data-md="ol"
+                  title="番号付き"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                  >
+                    <use
+                      xlink:href="images/sprite.symbol.svg#icon_number_list"
+                    ></use>
+                  </svg>
+                </button>
+                <button
+                  class="tb"
+                  data-md="task"
+                  title="チェックリスト"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                  >
+                    <use
+                      xlink:href="images/sprite.symbol.svg#icon_check_list"
+                    ></use>
+                  </svg>
+                </button>
+
+                <button
+                  class="tb"
+                  data-md="table"
+                  title="表"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                  >
+                    <use xlink:href="images/sprite.symbol.svg#icon_table"></use>
+                  </svg>
+                </button>
+                <button
+                  class="tb"
+                  data-md="quote"
+                  title="引用"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                  >
+                    <use xlink:href="images/sprite.symbol.svg#icon_quote"></use>
+                  </svg>
+                </button>
+                <button
+                  class="tb"
+                  data-md="code"
+                  title="コード"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                  >
+                    <use xlink:href="images/sprite.symbol.svg#icon_code"></use>
+                  </svg>
+                </button>
+
+                <button
+                  class="tb"
+                  data-md="link"
+                  title="リンク"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                  >
+                    <use xlink:href="images/sprite.symbol.svg#icon_link"></use>
+                  </svg>
+                </button>
+                <button
+                  class="tb"
+                  data-md="help"
+                  title="ヘルプ"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                  >
+                    <use xlink:href="images/sprite.symbol.svg#icon_help"></use>
+                  </svg>
+                </button>
+
+                <button
+                  id="togglePreview"
+                  class="tb previewBtn"
+                >
+                  プレビュー
+                </button>
+              </div>
+            </div>
+
+            <!-- ファイル添付 -->
+            <div
+              id="fileDropZone"
+              class="fileDropZone"
+            >
+              <div class="fileDropZoneText">
+                ファイルをドラッグ &
+                ドロップするかクリップボードから画像を貼り付けしてください
+                または
+              </div>
+              <div class="fileDropZoneHint">
+                ファイル追加 (Shiftキーを押しながらファイルを複数選択可能)
+              </div>
+              <button
+                type="button"
+                id="fileSelectBtn"
+                class="fileSelectBtn"
+              >
+                ファイルを選択...
+              </button>
+            </div>
+            <input
+              id="fileInput"
+              type="file"
+              multiple
+              hidden
+            />
+            <div
+              id="fileList"
+              class="fileList"
+            ></div>
+          </div>
+        </label>
+
+        <label style="margin-top: 10px">担当者</label>
+        <select
+          id="assignee"
+          style="width: 100%"
+          tabindex="4"
+        >
+          <option>プロジェクトを選択してください</option>
+        </select>
+        <div class="row">
+          <label>
+            期日
+            <input
+              id="due"
+              type="date"
+              tabindex="5"
+            />
+          </label>
+        </div>
+
+        <div class="divider"></div>
+
+        <div
+          class="hint"
+          id="aiHint"
+        >
+          AI推測は開発中です。
+        </div>
+
+        <div class="actions">
+          <button
+            id="clear"
+            tabindex="-1"
+          >
+            クリア
+          </button>
+          <button
+            id="submit"
+            class="primary btnSubmit"
+            tabindex="6"
+          >
+            送信
+          </button>
+        </div>
+      </main>
+    </div>
+    <!-- /contentArea -->
+
+    <script src="vendor/jquery.min.js"></script>
+    <script src="vendor/select2.min.js"></script>
+    <script src="vendor/marked.min.js"></script>
+    <script src="vendor/purify.min.js"></script>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

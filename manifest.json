@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Backlog Quick Add",
+  "version": "0.0.1",
+  "description": "Selected text -> open Side Panel form",
+  "permissions": ["contextMenus", "storage", "activeTab", "sidePanel", "alarms", "windows"],
+  "host_permissions": ["https://itreatinc.backlog.com/*"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "Backlog Quick Add" },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}
+
