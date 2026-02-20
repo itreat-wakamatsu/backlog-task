@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2"
+  },
+  "scripts": {
+    "convert-icon": "node convert-icon.mjs"
+  }
+}

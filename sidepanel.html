@@ -624,6 +624,18 @@
         font-size: 13px;
         margin: 0 0 8px;
       }
+      .settingsPanelTitle {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 20px;
+      }
+      .settingsGroupTitle {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 24px 0 8px;
+        border-top: 1px solid rgba(127, 127, 127, 0.25);
+        padding-top: 16px;
+      }
       .settingsRow {
         display: flex;
         align-items: center;
@@ -934,135 +946,141 @@
         class="settingsPanel"
         hidden
       >
-        <div class="settingsSection">
-          <h3>APIキー</h3>
-          <p
-            class="hint muted"
-            style="margin: 0 0 8px"
-          >
-            Backlogの「個人設定」→「API」で取得したキーを設定します。
-          </p>
-          <a
-            href="#"
-            id="settingsApiKeyChange"
-            >APIキーを変更</a
-          >
-          <div
-            id="settingsApiKeyForm"
-            class="settingsApiKeyForm"
-            hidden
-          >
-            <div class="apiSetupRow">
+        <h1 class="settingsPanelTitle">設定</h1>
+        <div class="settingsGroup">
+          <h2 class="settingsGroupTitle">オプション</h2>
+          <div class="settingsSection">
+            <h3>送信後の動作</h3>
+            <label class="settingsRow">
+              <input
+                type="checkbox"
+                id="openTaskAfterSubmit"
+              />
+              送信後、作成したBacklogタスクの画面を開く
+            </label>
+            <label
+              class="settingsRow"
+              id="openInBackgroundRow"
+              style="padding-left: 24px"
+            >
+              <input
+                type="checkbox"
+                id="openTaskInBackground"
+              />
+              バックグラウンドで開く
+            </label>
+          </div>
+          <div class="settingsSection">
+            <h3>ポップパネルで開く（Arc ブラウザ推奨）</h3>
+            <p
+              class="hint muted"
+              style="margin: 0 0 8px"
+            >
+              有効にすると、サイドパネルではなくポップアップで開くようになります。
+            </p>
+            <label class="settingsRow">
+              <input
+                type="checkbox"
+                id="openInNewTab"
+              />
+              ポップパネルで開く
+            </label>
+          </div>
+        </div>
+
+        <div class="settingsGroup">
+          <h2 class="settingsGroupTitle">Backlog連携</h2>
+          <div class="settingsSection">
+            <h3>APIキー</h3>
+            <p
+              class="hint muted"
+              style="margin: 0 0 8px"
+            >
+              Backlogの「個人設定」→「API」で取得したキーを設定します。
+            </p>
+            <a
+              href="#"
+              id="settingsApiKeyChange"
+              >APIキーを変更</a
+            >
+            <div
+              id="settingsApiKeyForm"
+              class="settingsApiKeyForm"
+              hidden
+            >
+              <div class="apiSetupRow">
+                <label>
+                  スペースID
+                  <input
+                    id="settingsBacklogSpaceId"
+                    type="text"
+                    placeholder="スペースIDを入力"
+                    autocomplete="off"
+                  />
+                </label>
+                <span class="apiSetupDotWrap"><span class="apiSetupDot">.</span></span>
+                <label>
+                  ドメイン
+                  <select id="settingsBacklogDomain">
+                    <option value="backlog.com">backlog.com</option>
+                    <option value="backlog.jp">backlog.jp</option>
+                    <option value="backlogtool.com">backlogtool.com</option>
+                  </select>
+                </label>
+              </div>
               <label>
-                スペースID
+                APIキー
                 <input
-                  id="settingsBacklogSpaceId"
-                  type="text"
-                  placeholder="スペースIDを入力"
+                  id="settingsApiKeyInput"
+                  type="password"
+                  placeholder="APIキーを入力"
                   autocomplete="off"
                 />
               </label>
-              <span class="apiSetupDotWrap"><span class="apiSetupDot">.</span></span>
-              <label>
-                ドメイン
-                <select id="settingsBacklogDomain">
-                  <option value="backlog.com">backlog.com</option>
-                  <option value="backlog.jp">backlog.jp</option>
-                  <option value="backlogtool.com">backlogtool.com</option>
-                </select>
-              </label>
+              <p
+                id="settingsApiKeyError"
+                class="apiKeyError"
+                hidden
+              ></p>
+              <button
+                type="button"
+                id="settingsApiKeySave"
+                class="primary btnSubmit"
+              >
+                保存
+              </button>
             </div>
-            <label>
-              APIキー
-              <input
-                id="settingsApiKeyInput"
-                type="password"
-                placeholder="APIキーを入力"
-                autocomplete="off"
-              />
-            </label>
+          </div>
+          <div class="settingsSection">
+            <h3>取得情報の更新</h3>
             <p
-              id="settingsApiKeyError"
-              class="apiKeyError"
-              hidden
-            ></p>
+              id="cacheFetchedAt"
+              class="hint muted"
+              style="margin: 0 0 8px"
+            >
+              —
+            </p>
             <button
               type="button"
-              id="settingsApiKeySave"
-              class="primary btnSubmit"
+              id="settingsRefreshProjects"
             >
-              保存
+              プロジェクト・担当者情報の更新
             </button>
           </div>
         </div>
-        <div class="settingsSection">
-          <h3>プロジェクト情報</h3>
-          <p
-            id="cacheFetchedAt"
-            class="hint muted"
-            style="margin: 0 0 8px"
-          >
-            —
-          </p>
-          <button
-            type="button"
-            id="settingsRefreshProjects"
-          >
-            プロジェクト情報の更新
-          </button>
-        </div>
-        <div class="settingsSection">
-          <h3>送信後の動作</h3>
-          <label class="settingsRow">
-            <input
-              type="checkbox"
-              id="openTaskAfterSubmit"
-            />
-            送信後、作成したBacklogタスクの画面を開く
-          </label>
-          <label
-            class="settingsRow"
-            id="openInBackgroundRow"
-            style="padding-left: 24px"
-          >
-            <input
-              type="checkbox"
-              id="openTaskInBackground"
-            />
-            バックグラウンドで開く
-          </label>
-        </div>
-        <div class="settingsSection">
-          <h3>Arc ブラウザ対応</h3>
-          <p
-            class="hint muted"
-            style="margin: 0 0 8px"
-          >
-            サイドパネルが使えない場合（Arc など）は、アイコンクリックで新規タブを開くようにできます。
-          </p>
-          <p
-            class="hint muted"
-            style="margin: 0 0 8px"
-          >
-            拡張アイコンを<strong>右クリック</strong> → 「ポップパネルで開く」をクリックすると、ポップアップ表示とサイドパネル表示を切り替えられます。有効な場合はメニューにチェックマークが表示されます。
-          </p>
-          <label class="settingsRow">
-            <input
-              type="checkbox"
-              id="openInNewTab"
-            />
-            アイコンクリックで新規タブを開く
-          </label>
-        </div>
-        <div class="settingsSection">
-          <h3>開発用</h3>
-          <label class="settingsRow">
-            <input
-              type="checkbox"
-              id="debugDryRun"
-            />
-            APIを送信せずリクエストを出力する
-          </label>
+
+        <div class="settingsGroup">
+          <h2 class="settingsGroupTitle">デベロッパーモード</h2>
+          <div class="settingsSection">
+            <h3>フォームデバッグ</h3>
+            <label class="settingsRow">
+              <input
+                type="checkbox"
+                id="debugDryRun"
+              />
+              タスク登録APIを送信せずリクエストを出力
+            </label>
+          </div>
         </div>
         <button
           type="button"

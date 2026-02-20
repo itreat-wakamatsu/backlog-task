@@ -17,17 +17,54 @@
   }
 })();
 
-// ポップアップモード検出: ウィンドウ幅が狭い場合はポップアップと判定
+// ポップアップモード検出: URLパラメータまたはウィンドウ幅で判定
 (function () {
-  // ポップアップは通常600px以下、サイドパネルはもっと広い
-  const isPopup = window.innerWidth <= 600;
+  const params = new URLSearchParams(location.search);
+  // from=action が削除されても判定できるよう、初期値を保持
+  const fromActionUrl = params.get("from") === "action";
+  const isPopupParam = params.get("popup") === "true";
+  
+  // サイドパネルかどうかを判定（from=action がある場合はサイドパネル）
+  // この値は後でURLから削除されても保持される
+  const isSidePanel = fromActionUrl;
+  
+  // from=action がある場合はサイドパネルなので、幅による判定を完全にスキップ
+  // ポップアップウィンドウで開く場合のみ popup=true パラメータが付く
+  let isPopup = false;
+  if (isSidePanel) {
+    // サイドパネルの場合は絶対にポップアップモードにしない
+    // もし誤って popup-mode クラスが適用されていた場合は削除
+    document.documentElement.classList.remove("popup-mode");
+    document.body.classList.remove("popup-mode");
+    isPopup = false;
+  } else if (isPopupParam) {
+    // popup=true パラメータがある場合はポップアップ
+    isPopup = true;
+  } else {
+    // その他の場合は幅で判定（600px以下ならポップアップ）
+    isPopup = window.innerWidth <= 600;
+  }
+  
   if (isPopup) {
     document.documentElement.classList.add("popup-mode");
     document.body.classList.add("popup-mode");
   }
-  // リサイズ時にも更新（念のため）
+  
+  // アイコンクリックまたはポップアップで開いたときはドラフトを「action から開いた」とマークし、課題の詳細を空にする
+  if (fromActionUrl || isPopup) {
+    chrome.runtime.sendMessage({ type: "DRAFT_OPENED_FROM_ACTION" }).catch(() => {});
+  }
+  
   window.addEventListener("resize", () => {
-    const isPopupNow = window.innerWidth <= 600;
+    // サイドパネルの場合はリサイズ時も幅による判定をスキップ
+    if (isSidePanel) {
+      // サイドパネルの場合は popup-mode を削除（もし誤って適用されていた場合）
+      document.documentElement.classList.remove("popup-mode");
+      document.body.classList.remove("popup-mode");
+      return;
+    }
+    // ポップアップウィンドウの場合のみ幅で判定
+    const isPopupNow = isPopupParam || window.innerWidth <= 600;
     document.documentElement.classList.toggle("popup-mode", isPopupNow);
     document.body.classList.toggle("popup-mode", isPopupNow);
   });
@@ -309,6 +346,8 @@ async function initMainForm() {
   document.querySelectorAll(".editorToolbar .tb").forEach((el) => el.setAttribute("tabindex", "-1"));
 
   await applyDraftToForm();
+  // 右クリックメニューから開いた場合、バックグラウンドがドラフトを設定するより先にパネルが読まれることがあるため、少し遅れて再適用する
+  setTimeout(applyDraftToForm, 150);
 }
 
 async function applyDraftToForm() {
@@ -317,7 +356,8 @@ async function applyDraftToForm() {
 
   const obj = await chrome.storage.local.get([DRAFT_STORAGE_KEY]);
   const draft = obj[DRAFT_STORAGE_KEY];
-  const text = fromAction ? "" : (draft?.selectedText?.trim() ?? "");
+  // ドラフトに selectedText があれば課題の詳細に入力（右クリック・アイコンクリックどちらでも）
+  const text = draft?.selectedText?.trim() ?? "";
 
   const descEl = document.getElementById("description");
   if (descEl) {
@@ -343,6 +383,15 @@ async function init() {
   await initMainForm();
   document.getElementById("headerLinks").hidden = false;
   setupApiKeyChangeHandler();
+  
+  // サイドパネルが開いたことをbackgroundに通知
+  // background側でsender.tab.idを取得できる
+  chrome.runtime.sendMessage({ type: "SIDE_PANEL_OPENED" }).catch(() => {});
+  
+  // サイドパネルが閉じたときに通知
+  window.addEventListener("beforeunload", () => {
+    chrome.runtime.sendMessage({ type: "SIDE_PANEL_CLOSED" }).catch(() => {});
+  });
 }
 
 function setupApiKeyChangeHandler() {
@@ -411,7 +460,7 @@ function setupApiKeyHandlers() {
   });
 }
 
-chrome.runtime.onMessage.addListener((msg) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.type === "DRAFT_UPDATED") {
     applyDraftToForm();
   }
@@ -1140,7 +1189,7 @@ async function loadSettingsUI() {
   document.getElementById("openTaskInBackground").checked = settings.openTaskInBackground;
   document.getElementById("openInBackgroundRow").style.opacity = settings.openTaskAfterSubmit ? "1" : "0.5";
   document.getElementById("openTaskInBackground").disabled = !settings.openTaskAfterSubmit;
-  document.getElementById("openInNewTab").checked = settings.openInNewTab;
+  document.getElementById("openInPopup").checked = settings.openInPopup;
   document.getElementById("debugDryRun").checked = settings.debugDryRun;
 
   await loadCache();
@@ -1257,8 +1306,8 @@ document.getElementById("openTaskInBackground")?.addEventListener("change", asyn
   await saveSettings({ ...(await getSettings()), openTaskInBackground: e.target.checked });
 });
 
-document.getElementById("openInNewTab")?.addEventListener("change", async (e) => {
-  await saveSettings({ ...(await getSettings()), openInNewTab: e.target.checked });
+document.getElementById("openInPopup")?.addEventListener("change", async (e) => {
+  await saveSettings({ ...(await getSettings()), openInPopup: e.target.checked });
 });
 
 document.getElementById("debugDryRun")?.addEventListener("change", async (e) => {

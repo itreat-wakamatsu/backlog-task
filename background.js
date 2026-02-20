@@ -20,6 +20,12 @@ const MAX_CONCURRENCY = 4;
 // storage keys
 const CACHE_KEY = "backlogCacheV2";
 const SETTINGS_KEY = "backlogSettings";
+const SIDE_PANEL_OPEN_KEY = "sidePanelOpen"; // { [tabId]: true }
+
+// sidePanel.open() はユーザージェスチャーに直接応答して呼ぶ必要があるため、
+// await/.then の前に同期的に呼び出す。そのためにメモリキャッシュを使用する。
+let cachedSettings = null;
+let cachedSidePanelOpen = {};
 
 // ---- install / alarms ----
 
@@ -32,6 +38,22 @@ chrome.runtime.onStartup?.addListener(async () => {
   await ensureAlarm();
   await applyOpenInPopupSetting();
   void syncBacklogData("onStartup");
+});
+
+// キャッシュをストレージと同期（sidePanel.open を同期的に呼ぶために必要）
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+  if (SETTINGS_KEY in changes) {
+    cachedSettings = changes[SETTINGS_KEY]?.newValue ?? null;
+    void applyOpenInPopupSetting();
+  }
+  if (SIDE_PANEL_OPEN_KEY in changes) {
+    cachedSidePanelOpen = { ...(changes[SIDE_PANEL_OPEN_KEY]?.newValue ?? {}) };
+  }
+});
+void chrome.storage.local.get([SETTINGS_KEY, SIDE_PANEL_OPEN_KEY]).then((obj) => {
+  cachedSettings = obj[SETTINGS_KEY] ?? null;
+  cachedSidePanelOpen = { ...(obj[SIDE_PANEL_OPEN_KEY] ?? {}) };
 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
@@ -58,6 +80,39 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       .then((result) => sendResponse({ ok: true, issue: result }))
       .catch((e) => sendResponse({ ok: false, error: String(e?.message ?? e) }));
     return true; // async response
+  }
+  if (msg?.type === "DRAFT_OPENED_FROM_ACTION") {
+    chrome.storage.local.get(["draft"]).then((obj) => {
+      const draft = obj.draft ?? {};
+      chrome.storage.local.set({
+        draft: { ...draft, openedFrom: "action" }
+      });
+    });
+    return false;
+  }
+  if (msg?.type === "SIDE_PANEL_OPENED") {
+    const tabId = sender?.tab?.id;
+    if (tabId) {
+      cachedSidePanelOpen[tabId] = true;
+      chrome.storage.local.get([SIDE_PANEL_OPEN_KEY]).then((obj) => {
+        const sidePanelOpen = obj[SIDE_PANEL_OPEN_KEY] || {};
+        sidePanelOpen[tabId] = true;
+        chrome.storage.local.set({ [SIDE_PANEL_OPEN_KEY]: sidePanelOpen });
+      });
+    }
+    return false;
+  }
+  if (msg?.type === "SIDE_PANEL_CLOSED") {
+    const tabId = sender?.tab?.id;
+    if (tabId) {
+      delete cachedSidePanelOpen[tabId];
+      chrome.storage.local.get([SIDE_PANEL_OPEN_KEY]).then((obj) => {
+        const sidePanelOpen = obj[SIDE_PANEL_OPEN_KEY] || {};
+        delete sidePanelOpen[tabId];
+        chrome.storage.local.set({ [SIDE_PANEL_OPEN_KEY]: sidePanelOpen });
+      });
+    }
+    return false;
   }
 });
 
@@ -269,6 +324,7 @@ const MENU_ID_OPEN_IN_POPUP = "backlog_open_in_popup";
 async function applyOpenInPopupSetting() {
   const obj = await chrome.storage.local.get([SETTINGS_KEY]);
   const settings = obj[SETTINGS_KEY] ?? {};
+  cachedSettings = settings;
   const openInPopup = !!settings.openInPopup;
   
   if (openInPopup) {
@@ -303,7 +359,7 @@ async function updatePopupMenuChecked() {
 chrome.runtime.onInstalled.addListener(async () => {
   chrome.contextMenus.create({
     id: MENU_ID,
-    title: "Backlogにタスク作成…（Side Panel）",
+    title: "Backlogにタスク作成…",
     contexts: ["page", "selection"]
   });
 
@@ -316,6 +372,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   // 現在の設定を取得してチェック状態を設定
   const obj = await chrome.storage.local.get([SETTINGS_KEY]);
   const settings = obj[SETTINGS_KEY] ?? {};
+  cachedSettings = settings;
   const openInPopup = !!settings.openInPopup;
 
   chrome.contextMenus.create({
@@ -349,14 +406,26 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
   if (info.menuItemId !== MENU_ID || !tab?.id) return;
 
-  // 設定を確認して、ポップパネル or サイドパネルを開く
+  // sidePanel.open() はユーザージェスチャーに直接応答して呼ぶ必要があるため、
+  // await/.then の前に同期的に呼ぶ。キャッシュで設定を取得。
+  const settings = cachedSettings ?? {};
+  const useSidePanel = !settings.openInPopup && !settings.openInNewTab;
+  if (useSidePanel) {
+    chrome.sidePanel.open({ tabId: tab.id }).catch((e) => {
+      console.error("sidePanel.open failed", e);
+    });
+  }
+
+  openSidePanelOrPopup(tab, info);
+});
+
+function openSidePanelOrPopup(tab, info) {
   chrome.storage.local.get([SETTINGS_KEY]).then(async (obj) => {
     const settings = obj[SETTINGS_KEY] ?? {};
     
-    // 選択テキストを取得
     const res = await chrome.tabs.sendMessage(tab.id, { type: "GET_SELECTION_TEXT" }).catch(() => null);
     const meta = res?.meta ?? {
-      text: info.selectionText ?? "",
+      text: info?.selectionText ?? "",
       url: tab.url ?? "",
       title: tab.title ?? ""
     };
@@ -364,37 +433,30 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       selectedText: meta.text,
       pageUrl: meta.url,
       pageTitle: meta.title,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      openedFrom: "contextMenu"
     };
     await chrome.storage.local.set({ draft });
     
     if (settings.openInNewTab) {
-      // 新規タブで開く
       chrome.tabs.create({ url: chrome.runtime.getURL("sidepanel.html") });
       chrome.runtime.sendMessage({ type: "DRAFT_UPDATED" }).catch(() => {});
       return;
     }
     
     if (settings.openInPopup) {
-      // ポップアップウィンドウで開く
       chrome.windows.create({
-        url: chrome.runtime.getURL("sidepanel.html"),
+        url: chrome.runtime.getURL("sidepanel.html?popup=true"),
         type: "popup",
         width: 550,
         height: 600
-      }).then(() => {
-        chrome.runtime.sendMessage({ type: "DRAFT_UPDATED" }).catch(() => {});
-      });
+      }).then(() => chrome.runtime.sendMessage({ type: "DRAFT_UPDATED" }).catch(() => {}));
       return;
     }
     
-    // サイドパネルで開く
-    chrome.sidePanel.open({ tabId: tab.id }).catch((e) => {
-      console.error("sidePanel.open failed", e);
-    });
     chrome.runtime.sendMessage({ type: "DRAFT_UPDATED" }).catch(() => {});
   });
-});
+}
 
 function addActionClickListener(handler) {
   // MV3
@@ -410,38 +472,81 @@ function addActionClickListener(handler) {
   console.error("No action API available (chrome.action / chrome.browserAction not found)");
 }
 
-addActionClickListener(async (tab) => {
+// 拡張機能アイコンクリック時の処理
+addActionClickListener((tab) => {
   if (!tab?.id) return;
+  console.log("addActionClickListener", tab);
   // openInPopup が true のときは popup が表示されるため onClicked は呼ばれない
   // ここに来るのはサイドパネルモードのときのみ
-  
-  // ユーザージェスチャーのコンテキスト内で sidePanel.open() を先に呼び出す
-  // （setOptions は後で実行しても問題ない）
+  // 重要: sidePanel.open() はユーザージェスチャーに直接応答して呼ぶ必要があるため、
+  // await の前に同期的に呼び出す。キャッシュで開閉状態を判定する。
+  const isOpen = cachedSidePanelOpen[tab.id] === true;
+
+  if (isOpen) {
+    // サイドパネルが開いている場合は閉じる（open は不要なのでユーザージェスチャー不要）
+    delete cachedSidePanelOpen[tab.id];
+    chrome.sidePanel.setOptions({ tabId: tab.id, enabled: false }).catch(() => {});
+    chrome.storage.local.get([SIDE_PANEL_OPEN_KEY]).then((obj) => {
+      const sidePanelOpen = obj[SIDE_PANEL_OPEN_KEY] || {};
+      delete sidePanelOpen[tab.id];
+      chrome.storage.local.set({ [SIDE_PANEL_OPEN_KEY]: sidePanelOpen });
+    });
+    setTimeout(() => {
+      chrome.sidePanel.setOptions({ tabId: tab.id, enabled: true, path: "sidepanel.html" }).catch(() => {});
+    }, 100);
+    return;
+  }
+
+  // 閉じている場合は開く - 必ず await の前に同期的に呼ぶ
   chrome.sidePanel.open({ tabId: tab.id }).catch(console.error);
-  
-  // その後、オプションとドラフトを設定
+  cachedSidePanelOpen[tab.id] = true;
+  chrome.storage.local.get([SIDE_PANEL_OPEN_KEY]).then((obj) => {
+    const sidePanelOpen = obj[SIDE_PANEL_OPEN_KEY] || {};
+    sidePanelOpen[tab.id] = true;
+    chrome.storage.local.set({ [SIDE_PANEL_OPEN_KEY]: sidePanelOpen });
+  });
+
   chrome.sidePanel.setOptions({
     tabId: tab.id,
     path: "sidepanel.html?from=action"
   }).catch(console.error);
 
-  chrome.storage.local.get([SETTINGS_KEY]).then((obj) => {
-    const settings = obj[SETTINGS_KEY] ?? {};
-    const emptyDraft = {
-      selectedText: "",
-      pageUrl: tab.url ?? "",
-      pageTitle: tab.title ?? "",
-      createdAt: Date.now()
+  const baseDraft = {
+    selectedText: "",
+    pageUrl: tab.url ?? "",
+    pageTitle: tab.title ?? "",
+    createdAt: Date.now(),
+    openedFrom: "action"
+  };
+  chrome.storage.local.set({ draft: baseDraft });
+  chrome.sidePanel.setOptions({ tabId: tab.id, path: "sidepanel.html" }).catch(() => {});
+  console.log("openSidePanelOrPopup", tab);
+
+  // 選択テキストを取得してドラフトを更新（content script が注入されていないページでは空のまま）
+  chrome.tabs.sendMessage(tab.id, { type: "GET_SELECTION_TEXT" }).then((res) => {
+    const meta = res?.meta ?? { text: "", url: tab.url ?? "", title: tab.title ?? "" };
+    console.log("meta", meta);
+    const draft = {
+      ...baseDraft,
+      selectedText: meta.text ?? "",
+      pageUrl: meta.url ?? tab.url ?? "",
+      pageTitle: meta.title ?? tab.title ?? ""
     };
-    
-    if (settings.openInNewTab) {
-      chrome.storage.local.set({ draft: emptyDraft });
-      chrome.tabs.create({ url: chrome.runtime.getURL("sidepanel.html?from=action") });
-      return;
+    chrome.storage.local.set({ draft });
+    chrome.runtime.sendMessage({ type: "DRAFT_UPDATED" }).catch(() => {});
+  }).catch(() => {
+    // content script が動作しないページ（chrome:// など）ではエラーになるが無視
+  });
+});
+
+// タブが閉じられたときにサイドパネルの状態を削除
+chrome.tabs.onRemoved.addListener((tabId) => {
+  chrome.storage.local.get([SIDE_PANEL_OPEN_KEY]).then((obj) => {
+    const sidePanelOpen = obj[SIDE_PANEL_OPEN_KEY] || {};
+    if (sidePanelOpen[tabId]) {
+      delete sidePanelOpen[tabId];
+      chrome.storage.local.set({ [SIDE_PANEL_OPEN_KEY]: sidePanelOpen });
     }
-    
-    chrome.storage.local.set({ draft: emptyDraft });
-    chrome.sidePanel.setOptions({ tabId: tab.id, path: "sidepanel.html" }).catch(() => {});
   });
 });
 
