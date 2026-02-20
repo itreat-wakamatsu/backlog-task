@@ -27,6 +27,58 @@ const SIDE_PANEL_OPEN_KEY = "sidePanelOpen"; // { [tabId]: true }
 let cachedSettings = null;
 let cachedSidePanelOpen = {};
 
+/** execCommand('copy') で選択をクリップボード経由で取得（Google Docs 等の canvas ベース描画に対応）。executeScript 用にインラインで定義 */
+function captureSelectionViaCopyInjected() {
+  return new Promise((resolve) => {
+    const handler = (e) => {
+      document.removeEventListener("copy", handler);
+      resolve(e.clipboardData?.getData("text/plain") ?? "");
+    };
+    document.addEventListener("copy", handler);
+    document.execCommand("copy");
+    setTimeout(() => {
+      document.removeEventListener("copy", handler);
+      resolve("");
+    }, 50);
+  });
+}
+
+/** タブから選択テキストを取得。content script → executeScript → execCommand('copy') の順で試す */
+async function getSelectionFromTab(tab, fallbackInfo) {
+  let text = "";
+  let url = tab?.url ?? "";
+  let title = tab?.title ?? "";
+
+  const res = await chrome.tabs.sendMessage(tab.id, { type: "GET_SELECTION_TEXT" }).catch(() => null);
+  if (res?.meta) {
+    text = res.meta.text ?? "";
+    url = res.meta.url ?? url;
+    title = res.meta.title ?? title;
+  }
+  if (!text && fallbackInfo?.selectionText) {
+    text = fallbackInfo.selectionText ?? "";
+  }
+  if (!text && chrome.scripting) {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => (window.getSelection && window.getSelection().toString()) || "",
+      allFrames: true
+    }).catch(() => []);
+    const found = results?.find((r) => r?.result && String(r.result).trim());
+    if (found) text = String(found.result).trim();
+  }
+  if (!text && chrome.scripting) {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: captureSelectionViaCopyInjected,
+      allFrames: true
+    }).catch(() => []);
+    const found = results?.find((r) => r?.result && String(r.result).trim());
+    if (found) text = String(found.result).trim();
+  }
+  return { text, url, title };
+}
+
 // ---- install / alarms ----
 
 chrome.runtime.onInstalled.addListener(async () => {
@@ -423,16 +475,11 @@ function openSidePanelOrPopup(tab, info) {
   chrome.storage.local.get([SETTINGS_KEY]).then(async (obj) => {
     const settings = obj[SETTINGS_KEY] ?? {};
     
-    const res = await chrome.tabs.sendMessage(tab.id, { type: "GET_SELECTION_TEXT" }).catch(() => null);
-    const meta = res?.meta ?? {
-      text: info?.selectionText ?? "",
-      url: tab.url ?? "",
-      title: tab.title ?? ""
-    };
+    const { text, url, title } = await getSelectionFromTab(tab, info);
     const draft = {
-      selectedText: meta.text,
-      pageUrl: meta.url,
-      pageTitle: meta.title,
+      selectedText: text,
+      pageUrl: url,
+      pageTitle: title,
       createdAt: Date.now(),
       openedFrom: "contextMenu"
     };
@@ -522,20 +569,16 @@ addActionClickListener((tab) => {
   chrome.sidePanel.setOptions({ tabId: tab.id, path: "sidepanel.html" }).catch(() => {});
   console.log("openSidePanelOrPopup", tab);
 
-  // 選択テキストを取得してドラフトを更新（content script が注入されていないページでは空のまま）
-  chrome.tabs.sendMessage(tab.id, { type: "GET_SELECTION_TEXT" }).then((res) => {
-    const meta = res?.meta ?? { text: "", url: tab.url ?? "", title: tab.title ?? "" };
-    console.log("meta", meta);
+  // 選択テキストを取得してドラフトを更新（Google Docs 等の iframe 内も executeScript で検索）
+  getSelectionFromTab(tab).then(({ text, url, title }) => {
     const draft = {
       ...baseDraft,
-      selectedText: meta.text ?? "",
-      pageUrl: meta.url ?? tab.url ?? "",
-      pageTitle: meta.title ?? tab.title ?? ""
+      selectedText: text ?? "",
+      pageUrl: url ?? tab.url ?? "",
+      pageTitle: title ?? tab.title ?? ""
     };
     chrome.storage.local.set({ draft });
     chrome.runtime.sendMessage({ type: "DRAFT_UPDATED" }).catch(() => {});
-  }).catch(() => {
-    // content script が動作しないページ（chrome:// など）ではエラーになるが無視
   });
 });
 
@@ -547,6 +590,57 @@ chrome.tabs.onRemoved.addListener((tabId) => {
       delete sidePanelOpen[tabId];
       chrome.storage.local.set({ [SIDE_PANEL_OPEN_KEY]: sidePanelOpen });
     }
+  });
+});
+
+// ショートカットキー（Ctrl+Shift+B / Cmd+Shift+B）: フォーカスを維持したまま開くため Google Docs 等で選択が取得しやすい
+chrome.commands?.onCommand?.addListener(async (command) => {
+  if (command !== "open-task-form") return;
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) return;
+
+  const settings = cachedSettings ?? {};
+  if (settings.openInPopup) {
+    const baseDraft = { selectedText: "", pageUrl: tab.url ?? "", pageTitle: tab.title ?? "", createdAt: Date.now(), openedFrom: "shortcut" };
+    chrome.storage.local.set({ draft: baseDraft });
+    getSelectionFromTab(tab).then(({ text, url, title }) => {
+      chrome.storage.local.set({
+        draft: { ...baseDraft, selectedText: text ?? "", pageUrl: url ?? tab.url ?? "", pageTitle: title ?? tab.title ?? "" }
+      });
+      chrome.windows.create({
+        url: chrome.runtime.getURL("sidepanel.html?popup=true"),
+        type: "popup",
+        width: 550,
+        height: 600
+      }).then(() => chrome.runtime.sendMessage({ type: "DRAFT_UPDATED" }).catch(() => {}));
+    });
+    return;
+  }
+  if (settings.openInNewTab) {
+    const { text, url, title } = await getSelectionFromTab(tab);
+    chrome.storage.local.set({
+      draft: { selectedText: text ?? "", pageUrl: url ?? tab.url ?? "", pageTitle: tab.title ?? "", createdAt: Date.now(), openedFrom: "shortcut" }
+    });
+    chrome.tabs.create({ url: chrome.runtime.getURL("sidepanel.html") });
+    chrome.runtime.sendMessage({ type: "DRAFT_UPDATED" }).catch(() => {});
+    return;
+  }
+
+  chrome.sidePanel.open({ tabId: tab.id }).catch(console.error);
+  cachedSidePanelOpen[tab.id] = true;
+  chrome.storage.local.get([SIDE_PANEL_OPEN_KEY]).then((obj) => {
+    const sidePanelOpen = obj[SIDE_PANEL_OPEN_KEY] || {};
+    sidePanelOpen[tab.id] = true;
+    chrome.storage.local.set({ [SIDE_PANEL_OPEN_KEY]: sidePanelOpen });
+  });
+  chrome.sidePanel.setOptions({ tabId: tab.id, path: "sidepanel.html?from=action" }).catch(() => {});
+  const baseDraft = { selectedText: "", pageUrl: tab.url ?? "", pageTitle: tab.title ?? "", createdAt: Date.now(), openedFrom: "shortcut" };
+  chrome.storage.local.set({ draft: baseDraft });
+  chrome.sidePanel.setOptions({ tabId: tab.id, path: "sidepanel.html" }).catch(() => {});
+
+  getSelectionFromTab(tab).then(({ text, url, title }) => {
+    chrome.storage.local.set({ draft: { ...baseDraft, selectedText: text ?? "", pageUrl: url ?? tab.url ?? "", pageTitle: title ?? tab.title ?? "" } });
+    chrome.runtime.sendMessage({ type: "DRAFT_UPDATED" }).catch(() => {});
   });
 });
 
