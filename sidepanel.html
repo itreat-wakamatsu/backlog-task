@@ -908,6 +908,10 @@
         --ui-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
       }
 
+      [hidden] {
+        display: none !important;
+      }
+
       body {
         padding: 0;
         background:
@@ -994,6 +998,9 @@
 
       .settingsPanel {
         padding: 16px;
+      }
+
+      .settingsPanel:not([hidden]) {
         display: grid;
         gap: 14px;
       }
