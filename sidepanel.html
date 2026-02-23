@@ -1379,7 +1379,7 @@
         hidden
       >
         <h1 class="settingsPanelTitle">設定</h1>
-        <p class="settingsPanelSub hint muted">動作や連携先、AI推測の挙動をここで調整できます。</p>
+        <p class="settingsPanelSub hint muted">動作や連携先、AI自動入力の挙動をここで調整できます。</p>
         <div class="settingsGroup">
           <h2 class="settingsGroupTitle">オプション</h2>
           <div class="settingsSection">
@@ -1504,14 +1504,14 @@
         </div>
 
         <div class="settingsGroup">
-          <h2 class="settingsGroupTitle">AI推測</h2>
+          <h2 class="settingsGroupTitle">AI自動入力</h2>
           <p class="hint muted" style="margin: 0 0 8px">
-            選択テキストとページのURL・タイトルから、課題の件名・詳細・担当者・期日を推測します。OpenAI と Gemini の API キーはそれぞれ別に保存・管理されます。
+            選択テキストとページのURL・タイトルから、課題の件名・詳細・担当者・期日を自動入力します。OpenAI と Gemini の API キーはそれぞれ別に保存・管理されます。
           </p>
           <div class="settingsSection">
             <label class="settingsRow">
               <input type="checkbox" id="aiEnabled" />
-              AI推測を有効にする
+              AI自動入力を有効にする
             </label>
             <label class="settingsRow" style="margin-top: 6px">
               <input type="checkbox" id="aiSuggestProjectAssignee" />
@@ -1530,7 +1530,7 @@
           <div class="settingsSection">
             <h3>AI APIキー</h3>
             <p class="hint muted" style="margin: 0 0 8px" id="aiApiKeyHint">
-              OpenAI の API キーを設定すると、課題の内容を自動推測できます。キーは拡張機能内にのみ保存され、OpenAI の API に送信されます。
+              OpenAI の API キーを設定すると、課題の内容を自動入力できます。キーは拡張機能内にのみ保存され、OpenAI の API に送信されます。
             </p>
             <p class="hint muted" style="margin: 0 0 8px; font-size: 11px">
               現在選択中のプロバイダ（OpenAI / Gemini）用のキーだけを入力・保存します。切り替え時はそれぞれのキーを別途設定してください。
@@ -1572,7 +1572,7 @@
             </label>
           </div>
           <div class="settingsSection">
-            <h3>AI推測ログ</h3>
+            <h3>AI自動入力ログ</h3>
             <label class="settingsRow">
               <input
                 type="checkbox"
@@ -1598,9 +1598,9 @@
       >
         <div class="hint muted">最小入力で素早く登録できます。必要な項目だけ埋めて送信してください。</div>
         <div class="pills" style="align-items: center; gap: 8px">
-          <span class="pill" id="aiStatus">AI推測: オフ</span>
-          <button type="button" id="aiSuggestBtn" class="tb previewBtn" title="選択テキストとページ情報から課題を推測">
-            AIで推測
+          <span class="pill" id="aiStatus">AI自動入力: オフ</span>
+          <button type="button" id="aiSuggestBtn" class="tb previewBtn" title="選択テキストとページ情報から課題を自動入力">
+            AIで自動入力
           </button>
         </div>
 
@@ -1884,7 +1884,7 @@
         <div class="divider"></div>
 
         <div class="hint" id="aiHint">
-          設定で「AI推測を有効にする」とAPIキーを保存すると、課題の件名・詳細・担当者・期日を自動推測できます。
+          設定で「AI自動入力を有効にする」とAPIキーを保存すると、課題の件名・詳細・担当者・期日を自動入力できます。
         </div>
 
         <div class="actions">

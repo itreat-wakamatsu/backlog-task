@@ -1,6 +1,6 @@
 /**
- * AI課題推測: ドラフト（選択テキスト・ページURL・タイトル）をコンテキストに
- * OpenAI / Gemini API で件名・詳細・担当者・期日を推測し、フォームに反映する。
+ * AI自動入力: ドラフト（選択テキスト・ページURL・タイトル）をコンテキストに
+ * OpenAI / Gemini API で件名・詳細・担当者・期日を推測し、フォームに自動入力する。
  */
 
 const OPENAI_API_BASE = "https://api.openai.com/v1";
@@ -107,7 +107,7 @@ function isValidDateString(s) {
 }
 
 /**
- * @param {Object} result - AI推測結果 { summary, description, projectKey, assigneeName, dueDate }
+ * @param {Object} result - AI自動入力結果 { summary, description, projectKey, assigneeName, dueDate }
  * @param {boolean} applyProjectAssignee - プロジェクト・担当者をフォームに反映するか
  * @param {string} [pageUrl] - 作成元ページURL（課題の詳細の末尾に追記する用）
  * @param {string} [fixedProjectId] - プロジェクト固定時は変更しない
@@ -234,7 +234,7 @@ function getAiApiKey(settings) {
   return (key ?? "").trim();
 }
 
-/** フォーム表示後の自動AI推測を1回だけ行ったか */
+/** フォーム表示後の自動AI実行を1回だけ行ったか */
 let _aiSuggestDidRunOnce = false;
 
 /**
@@ -253,7 +253,7 @@ async function maybeRunAiSuggestOnce() {
 }
 
 /**
- * AI推測を実行し、結果をフォームに反映する。
+ * AI自動入力を実行し、結果をフォームに反映する。
  * 設定が無効またはAPIキー未設定の場合は何もしない。
  * @returns {Promise<boolean>} 実行した場合 true
  */
@@ -261,14 +261,14 @@ async function runAiSuggest() {
   const settings = await getSettings();
   const apiKey = getAiApiKey(settings);
   if (!settings.aiEnabled || !apiKey) {
-    updateAiStatus("AI推測: オフ");
+    updateAiStatus("AI自動入力: オフ");
     return false;
   }
 
   const draft = await getDraft();
   const hasContext = draft && (draft.selectedText?.trim() || draft.pageUrl?.trim());
   if (!hasContext) {
-    updateAiStatus("AI推測: コンテキストなし");
+    updateAiStatus("AI自動入力: コンテキストなし");
     return false;
   }
 
@@ -285,7 +285,7 @@ async function runAiSuggest() {
   const assigneesByProjectId = BQA.cache?.projectUsersByProjectId ?? {};
   const inferProjectAssignee = settings.aiSuggestProjectAssignee !== false;
 
-  updateAiStatus("AI推測: 実行中…");
+  updateAiStatus("AI自動入力: 実行中…");
   const startMs = performance.now();
 
   try {
@@ -328,14 +328,14 @@ async function runAiSuggest() {
 
     await applyToForm(result, inferProjectAssignee, draft?.pageUrl ?? "", fixedProjectId);
     const elapsedSec = ((performance.now() - startMs) / 1000).toFixed(1);
-    updateAiStatus(`AI推測: 完了 (${elapsedSec}秒)`);
-    setTopNotification("AIで課題を推測しました。必要に応じて編集して送信してください。", false);
+    updateAiStatus(`AI自動入力: 完了 (${elapsedSec}秒)`);
+    setTopNotification("AIで課題を自動入力しました。必要に応じて編集して送信してください。", false);
     return true;
   } catch (e) {
     const raw = e?.message ?? String(e);
     const msg = toUserFriendlyAiError(raw);
-    updateAiStatus("AI推測: エラー", true);
-    setTopNotification("AI推測エラー: " + msg, true);
+    updateAiStatus("AI自動入力: エラー", true);
+    setTopNotification("AI自動入力エラー: " + msg, true);
     return false;
   }
 }
@@ -372,12 +372,12 @@ async function updateAiStatusFromSettings() {
   if (!statusEl && !hintEl) return;
   const settings = await getSettings();
   if (!settings.aiEnabled || !getAiApiKey(settings)) {
-    if (statusEl) statusEl.textContent = "AI推測: オフ";
-    if (hintEl) hintEl.textContent = "設定で「AI推測を有効にする」とAPIキーを保存すると、課題の件名・詳細・担当者・期日を自動推測できます。";
+    if (statusEl) statusEl.textContent = "AI自動入力: オフ";
+    if (hintEl) hintEl.textContent = "設定で「AI自動入力を有効にする」とAPIキーを保存すると、課題の件名・詳細・担当者・期日を自動入力できます。";
     return;
   }
-  if (statusEl) statusEl.textContent = "AI推測: 利用可能";
-  if (hintEl) hintEl.textContent = "選択テキストとページ情報から課題を推測します。「AIで推測」ボタンで再実行できます。";
+  if (statusEl) statusEl.textContent = "AI自動入力: 利用可能";
+  if (hintEl) hintEl.textContent = "選択テキストとページ情報から課題を自動入力します。「AIで自動入力」ボタンで再実行できます。";
 }
 
 document.getElementById("aiSuggestBtn")?.addEventListener("click", () => runAiSuggest());
