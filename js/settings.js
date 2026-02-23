@@ -191,7 +191,7 @@ document.getElementById("settingsRefreshProjects")?.addEventListener("click", as
       "最終取得: " + formatFetchedAt(BQA.cache?.fetchedAt);
   } finally {
     btn.disabled = false;
-    btn.textContent = "プロジェクト情報の更新";
+    btn.textContent = "プロジェクト・担当者情報の更新";
   }
 });
 

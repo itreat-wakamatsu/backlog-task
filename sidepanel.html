@@ -881,6 +881,399 @@
         }
       }
     </style>
+    <style>
+      :root {
+        --ui-bg: #f3f6fb;
+        --ui-surface: #ffffff;
+        --ui-surface-muted: #f6f9ff;
+        --ui-text: #1b2435;
+        --ui-text-soft: #5f6c85;
+        --ui-border: #d7e0f0;
+        --ui-primary: #2563eb;
+        --ui-primary-hover: #1d4ed8;
+        --ui-ring: rgba(37, 99, 235, 0.24);
+        --ui-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      }
+
+      html.dark-mode {
+        --ui-bg: #0f172a;
+        --ui-surface: #162238;
+        --ui-surface-muted: #111c31;
+        --ui-text: #e6edf9;
+        --ui-text-soft: #a7b5cc;
+        --ui-border: rgba(148, 163, 184, 0.35);
+        --ui-primary: #60a5fa;
+        --ui-primary-hover: #3b82f6;
+        --ui-ring: rgba(96, 165, 250, 0.3);
+        --ui-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+      }
+
+      body {
+        padding: 0;
+        background:
+          radial-gradient(circle at top right, rgba(37, 99, 235, 0.1), transparent 52%),
+          var(--ui-bg);
+        color: var(--ui-text);
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--ui-border);
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(8px);
+      }
+
+      html.dark-mode header {
+        background: rgba(22, 34, 56, 0.92);
+      }
+
+      header h1 {
+        font-size: 16px;
+        margin: 0 0 5px;
+        letter-spacing: 0.01em;
+      }
+
+      #pageMeta {
+        color: var(--ui-text-soft);
+        font-size: 12px;
+      }
+
+      #headerLinks.headerLinks {
+        margin-top: 8px !important;
+      }
+
+      #headerLinks a {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--ui-border);
+        background: var(--ui-surface-muted);
+        color: var(--ui-text-soft);
+        border-radius: 999px;
+        text-decoration: none;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 10px;
+        transition:
+          border-color 0.2s,
+          color 0.2s,
+          background 0.2s;
+      }
+
+      #headerLinks a:hover {
+        color: var(--ui-primary);
+        border-color: var(--ui-primary);
+      }
+
+      #contentArea {
+        padding: 14px;
+        display: grid;
+        gap: 12px;
+      }
+
+      #mainForm,
+      #settingsPanel,
+      .apiSetupCard {
+        border-radius: 16px;
+        border: 1px solid var(--ui-border);
+        background: var(--ui-surface);
+        box-shadow: var(--ui-shadow);
+      }
+
+      #mainForm {
+        padding: 16px;
+        gap: 14px;
+      }
+
+      .apiSetupCard {
+        padding: 18px;
+        margin: 0;
+      }
+
+      .settingsPanel {
+        padding: 16px;
+        display: grid;
+        gap: 14px;
+      }
+
+      .settingsPanelTitle {
+        margin: 0;
+        font-size: 19px;
+      }
+
+      .settingsPanelSub {
+        margin: -4px 0 0;
+      }
+
+      .settingsGroup {
+        display: grid;
+        gap: 10px;
+        border: 1px solid var(--ui-border);
+        border-radius: 14px;
+        padding: 14px;
+        background: var(--ui-surface-muted);
+      }
+
+      .settingsGroupTitle {
+        border-top: none;
+        margin: 0;
+        padding-top: 0;
+        font-size: 14px;
+        color: var(--ui-text);
+      }
+
+      .settingsSection {
+        margin: 0;
+        padding: 11px 12px;
+        border: 1px solid var(--ui-border);
+        border-radius: 12px;
+        background: var(--ui-surface);
+      }
+
+      .settingsSection h3 {
+        margin-bottom: 8px;
+        color: var(--ui-text);
+      }
+
+      .settingsRow {
+        line-height: 1.45;
+      }
+
+      main label,
+      .apiSetupSection label,
+      .settingsSection label,
+      .settingsApiKeyForm label {
+        color: var(--ui-text-soft);
+        font-size: 12px;
+        font-weight: 600;
+        gap: 7px;
+      }
+
+      .fieldLegend {
+        font-size: 13px;
+        color: var(--ui-text);
+        font-weight: 700;
+      }
+
+      .hint,
+      .muted {
+        color: var(--ui-text-soft);
+        opacity: 1;
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        min-height: 38px;
+        border-color: var(--ui-border);
+        background: var(--ui-surface);
+        color: var(--ui-text);
+      }
+
+      input::placeholder,
+      textarea::placeholder {
+        color: var(--ui-text-soft);
+        opacity: 0.9;
+      }
+
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible,
+      button:focus-visible {
+        outline: none;
+        border-color: var(--ui-primary);
+        box-shadow: 0 0 0 3px var(--ui-ring);
+      }
+
+      .select2-container--default .select2-selection--single {
+        min-height: 38px;
+        border-color: var(--ui-border) !important;
+        background: var(--ui-surface) !important;
+      }
+
+      .select2-container--default .select2-selection__rendered {
+        color: var(--ui-text-soft) !important;
+      }
+
+      .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: var(--ui-primary) !important;
+        box-shadow: 0 0 0 3px var(--ui-ring);
+      }
+
+      .select2-dropdown {
+        border-color: var(--ui-border) !important;
+        border-radius: 10px !important;
+        overflow: hidden;
+        box-shadow: var(--ui-shadow);
+      }
+
+      .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background: var(--ui-primary) !important;
+      }
+
+      .settingsRow input[type="checkbox"],
+      .useProjectForPageRow input[type="checkbox"] {
+        accent-color: var(--ui-primary);
+      }
+
+      button {
+        font-weight: 600;
+        transition:
+          transform 0.15s,
+          box-shadow 0.2s,
+          border-color 0.2s,
+          background 0.2s;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .btnSubmit,
+      button.primary {
+        background: var(--ui-primary) !important;
+        color: #fff !important;
+        border: none !important;
+        box-shadow: 0 7px 16px rgba(37, 99, 235, 0.3);
+      }
+
+      .btnSubmit:hover:not(:disabled),
+      button.primary:hover:not(:disabled) {
+        background: var(--ui-primary-hover) !important;
+      }
+
+      .topNotification {
+        margin: 0;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        font-weight: 500;
+      }
+
+      .topNotification.success {
+        border-color: rgba(46, 125, 50, 0.25);
+      }
+
+      .topNotification.error {
+        border-color: rgba(198, 40, 40, 0.3);
+      }
+
+      .pill {
+        border-color: var(--ui-border);
+        background: var(--ui-surface-muted);
+        color: var(--ui-text-soft);
+        font-weight: 600;
+      }
+
+      .editorCard {
+        border-color: var(--ui-border);
+        border-radius: 14px;
+        background: var(--ui-surface);
+      }
+
+      .editorMain {
+        padding: 12px;
+      }
+
+      .editorTextarea,
+      .editorPreview {
+        border-color: var(--ui-border);
+        background: var(--ui-surface-muted);
+        color: var(--ui-text);
+        border-radius: 10px;
+      }
+
+      .editorToolbar {
+        border-top-color: var(--ui-border);
+        background: var(--ui-surface-muted);
+      }
+
+      .tb {
+        border-color: var(--ui-border);
+        color: var(--ui-text-soft);
+        background: var(--ui-surface);
+      }
+
+      .tb:hover:not(:disabled) {
+        border-color: var(--ui-primary);
+        color: var(--ui-primary);
+        background: rgba(37, 99, 235, 0.08);
+      }
+
+      html.dark-mode .tb:hover:not(:disabled) {
+        background: rgba(96, 165, 250, 0.16);
+      }
+
+      .fileDropZone {
+        border-color: var(--ui-border);
+        background: var(--ui-surface-muted);
+        border-radius: 10px;
+      }
+
+      .fileSelectBtn {
+        border-color: var(--ui-border);
+        color: var(--ui-primary);
+        background: var(--ui-surface);
+        font-weight: 600;
+      }
+
+      .fileSelectBtn:hover {
+        border-color: var(--ui-primary);
+        background: rgba(37, 99, 235, 0.08);
+      }
+
+      html.dark-mode .fileSelectBtn:hover {
+        background: rgba(96, 165, 250, 0.16);
+      }
+
+      .actions {
+        position: sticky;
+        bottom: 0;
+        padding-top: 12px;
+        margin-top: 4px;
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--ui-surface) 30%);
+      }
+
+      html.dark-mode .actions {
+        background: linear-gradient(to bottom, rgba(22, 34, 56, 0), var(--ui-surface) 30%);
+      }
+
+      #clear {
+        background: var(--ui-surface-muted);
+      }
+
+      .divider {
+        background: var(--ui-border);
+        margin: 2px 0 0;
+      }
+
+      @media (max-width: 560px) {
+        .row,
+        .actions {
+          grid-template-columns: 1fr;
+        }
+
+        .apiSetupRow {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .apiSetupRow label:last-child {
+          width: auto;
+        }
+
+        .apiSetupDotWrap {
+          display: none !important;
+        }
+      }
+    </style>
   </head>
   <body>
     <header>
@@ -893,8 +1286,7 @@
       </p>
       <p
         id="headerLinks"
-        class="muted"
-        style="font-size: 11px; margin-top: 4px"
+        class="muted headerLinks"
         hidden
       >
         <a
@@ -980,6 +1372,7 @@
         hidden
       >
         <h1 class="settingsPanelTitle">設定</h1>
+        <p class="settingsPanelSub hint muted">動作や連携先、AI推測の挙動をここで調整できます。</p>
         <div class="settingsGroup">
           <h2 class="settingsGroupTitle">オプション</h2>
           <div class="settingsSection">
@@ -1196,6 +1589,7 @@
         hidden
         style="flex: 1"
       >
+        <div class="hint muted">最小入力で素早く登録できます。必要な項目だけ埋めて送信してください。</div>
         <div class="pills" style="align-items: center; gap: 8px">
           <span class="pill" id="aiStatus">AI推測: オフ</span>
           <button type="button" id="aiSuggestBtn" class="tb previewBtn" title="選択テキストとページ情報から課題を推測">
@@ -1203,7 +1597,7 @@
           </button>
         </div>
 
-        <label>プロジェクト</label>
+        <label class="fieldLegend">プロジェクト</label>
         <select
           id="project"
           style="width: 100%"
@@ -1217,6 +1611,7 @@
         </label>
 
         <label>
+          <span class="fieldLegend">件名</span>
           <input
             id="title"
             placeholder="件名"
@@ -1225,6 +1620,7 @@
         </label>
 
         <label>
+          <span class="fieldLegend">詳細</span>
           <!-- 本文 -->
           <div class="editorCard">
             <div class="editorMain">
@@ -1459,7 +1855,7 @@
           </div>
         </label>
 
-        <label style="margin-top: 10px">担当者</label>
+        <label class="fieldLegend" style="margin-top: 10px">担当者</label>
         <select
           id="assignee"
           style="width: 100%"
