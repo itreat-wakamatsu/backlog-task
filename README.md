@@ -1,11 +1,15 @@
 # Backlog Quick Add
 
+**バージョン:** 0.1.0
+
 Chrome 拡張機能。ページで選択したテキストをそのまま使って、サイドパネルから Backlog にタスク（課題）を素早く登録できます。
 
 ## 機能
 
 - **選択テキストからタスク作成**  
   ページ上のテキストを選択し、右クリックメニュー「Backlog にタスク作成」またはツールバーアイコンからサイドパネルを開くと、選択テキストが「概要」や「詳細」に自動で入ります。
+- **AI による課題推測（オプション）**  
+  OpenAI または Google Gemini の API キーを設定すると、選択テキストとページの URL・タイトルから課題の件名・詳細・担当者・期日を推測し、フォームに反映できます。「AIで推測」ボタンでいつでも再実行可能です。
 - **Backlog API 連携**  
   プロジェクト・課題種別・担当者・優先度などを API から取得し、6 時間ごとにキャッシュを更新。サイドパネル内で「今すぐ更新」も可能です。
 - **ダークモード**  
@@ -52,10 +56,18 @@ Chrome 拡張機能。ページで選択したテキストをそのまま使っ�
 - **API キー** … Backlog の「個人設定」→「API」で取得したキーを設定・変更します。
 - **プロジェクト・担当者情報の更新** … キャッシュを破棄し、API からプロジェクト・担当者などを再取得します。
 
+### AI 推測
+
+- **AI推測を有効にする** … OpenAI または Gemini の API キーを設定すると、選択テキストとページ情報から課題の件名・詳細・担当者・期日を自動推測できます。
+- **プロバイダ** … OpenAI (GPT) または Gemini (Google AI) を選択。それぞれ別の API キーを保存・管理します。
+- **プロジェクト・担当者を推測する** … 有効にすると、Backlog のプロジェクト一覧・担当者一覧をコンテキストに含めて推測します。
+
 ### デベロッパーモード
 
 - **タスク登録 API を送信せずリクエストを出力**  
   有効にすると、課題作成時に実際には API を呼ばず、送信予定のリクエスト内容をコンソールに出力します。デバッグ用です。
+- **プロンプトとレスポンス（JSON）をコンソールに出力**  
+  有効にすると、AI 推測実行時にプロンプトと API レスポンス（JSON）をコンソールに出力します。AI 推測のデバッグ用です。
 
 ## 使い方
 
@@ -85,9 +97,32 @@ Chrome 拡張機能。ページで選択したテキストをそのまま使っ�
 - **activeTab** / **scripting** … アクティブタブから選択テキスト取得
 - **sidePanel** … サイドパネル表示
 - **alarms** … 6 時間ごとの Backlog データ同期
-- **host_permissions** … `https://itreatinc.backlog.com/*`（設定で変更した Backlog URL には `scripting` 等で対応）
+- **host_permissions** … Backlog（`https://*.backlog.com/*`, `https://*.backlog.jp/*`, `https://*.backlogtool.com/*`）、OpenAI API、Google Gemini API へのアクセス
 
 ## 開発
 
 - アイコン生成: `node convert-icon.mjs`（要 Node.js、`images/backlog_add_task.svg` から PNG を生成）
 - 変更後は `chrome://extensions/` で「更新」ボタンを押して動作を確認してください。
+
+### E2E テスト（Playwright）
+
+[Chrome 拡張機能の E2E テスト](https://developer.chrome.com/docs/extensions/how-to/test/end-to-end-testing) に沿って、Playwright でサイドパネルとコンテンツの動作を検証できます。
+
+1. **ブラウザのインストール**（初回のみ）  
+   ```bash
+   npx playwright install chromium
+   ```
+2. **テスト実行**  
+   ```bash
+   npm run test:e2e
+   ```
+3. **UI モードで実行**  
+   ```bash
+   npm run test:e2e:ui
+   ```
+
+テストは拡張機能を `--load-extension` で読み込み、`chrome-extension://<id>/sidepanel.html` を開いて初期設定画面の表示などを確認します。拡張 ID はサービスワーカーから取得し、取得できない場合はパスから算出した ID を使います。**`net::ERR_ABORTED` やタイムアウトで失敗する場合**は、Chrome で `chrome://extensions` を開き、当拡張の「ID」をコピーしてから次で実行してください。
+
+```bash
+E2E_EXTENSION_ID=ここにIDを貼る npm run test:e2e
+```

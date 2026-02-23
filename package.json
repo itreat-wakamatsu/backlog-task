@@ -2,7 +2,13 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2"
   },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  },
   "scripts": {
-    "convert-icon": "node convert-icon.mjs"
+    "convert-icon": "node convert-icon.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test e2e/smoke.spec.ts",
+    "test:e2e:ui": "playwright test --ui"
   }
 }

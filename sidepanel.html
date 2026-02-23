@@ -160,6 +160,30 @@
         font-size: 12px;
         opacity: 0.75;
       }
+      .useProjectForPageRow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 6px;
+        cursor: pointer;
+      }
+      .useProjectForPageRow input[type="checkbox"] {
+        width: auto;
+        min-width: 18px;
+        height: 18px;
+        margin: 0;
+        flex-shrink: 0;
+      }
+      .useProjectForPageRow input:disabled + span {
+        opacity: 0.6;
+      }
+      .useProjectForPageRow input:disabled {
+        cursor: default;
+      }
+      .useProjectForPageRow span {
+        flex: 1;
+        line-height: 1.4;
+      }
       .pill {
         display: inline-flex;
         align-items: center;
@@ -169,6 +193,15 @@
         border: 1px solid rgba(127, 127, 127, 0.35);
         font-size: 12px;
         opacity: 0.9;
+      }
+      .pill.error {
+        border-color: rgba(198, 40, 40, 0.5);
+        color: #c62828;
+      }
+      @media (prefers-color-scheme: dark) {
+        .pill.error {
+          color: #e57373;
+        }
       }
       .pills {
         display: flex;
@@ -981,19 +1014,10 @@
             <label class="settingsRow">
               <input
                 type="checkbox"
-                id="openInNewTab"
+                id="openInPopup"
               />
               ポップパネルで開く
             </label>
-          </div>
-          <div class="settingsSection">
-            <h3>ショートカットキー（Google Docs 等で推奨）</h3>
-            <p
-              class="hint muted"
-              style="margin: 0 0 8px"
-            >
-              テキストを選択した状態で <kbd>Ctrl+Shift+B</kbd>（Mac: <kbd>⌘+Shift+B</kbd>）を押すと、フォーカスを維持したまま開くため選択テキストが取得しやすくなります。
-            </p>
           </div>
         </div>
 
@@ -1071,10 +1095,67 @@
             </p>
             <button
               type="button"
+              class="primary btnSubmit"
               id="settingsRefreshProjects"
             >
               プロジェクト・担当者情報の更新
             </button>
+          </div>
+        </div>
+
+        <div class="settingsGroup">
+          <h2 class="settingsGroupTitle">AI推測</h2>
+          <p class="hint muted" style="margin: 0 0 8px">
+            選択テキストとページのURL・タイトルから、課題の件名・詳細・担当者・期日を推測します。OpenAI と Gemini の API キーはそれぞれ別に保存・管理されます。
+          </p>
+          <div class="settingsSection">
+            <label class="settingsRow">
+              <input type="checkbox" id="aiEnabled" />
+              AI推測を有効にする
+            </label>
+            <label class="settingsRow" style="margin-top: 6px">
+              <input type="checkbox" id="aiSuggestProjectAssignee" />
+              プロジェクトと担当者を推測する
+            </label>
+          </div>
+          <div class="settingsSection">
+            <h3>プロバイダ</h3>
+            <label>
+              <select id="aiProviderSelect">
+                <option value="openai">OpenAI (GPT)</option>
+                <option value="gemini">Gemini (Google AI)</option>
+              </select>
+            </label>
+          </div>
+          <div class="settingsSection">
+            <h3>AI APIキー</h3>
+            <p class="hint muted" style="margin: 0 0 8px" id="aiApiKeyHint">
+              OpenAI の API キーを設定すると、課題の内容を自動推測できます。キーは拡張機能内にのみ保存され、OpenAI の API に送信されます。
+            </p>
+            <p class="hint muted" style="margin: 0 0 8px; font-size: 11px">
+              現在選択中のプロバイダ（OpenAI / Gemini）用のキーだけを入力・保存します。切り替え時はそれぞれのキーを別途設定してください。
+            </p>
+            <label>
+              <span id="aiApiKeyLabel">APIキー（OpenAI用）</span>
+              <input
+                id="aiApiKeyInput"
+                type="password"
+                placeholder="sk-..."
+                autocomplete="off"
+              />
+            </label>
+            <button type="button" id="aiApiKeySave" class="primary btnSubmit" style="margin-top: 8px">
+              AI設定を保存
+            </button>
+          </div>
+          <div class="settingsSection">
+            <h3>モデル</h3>
+            <label>
+              <select id="aiModelSelect">
+                <option value="gpt-4o-mini">gpt-4o-mini（推奨）</option>
+                <option value="gpt-4o">gpt-4o</option>
+              </select>
+            </label>
           </div>
         </div>
 
@@ -1088,6 +1169,16 @@
                 id="debugDryRun"
               />
               タスク登録APIを送信せずリクエストを出力
+            </label>
+          </div>
+          <div class="settingsSection">
+            <h3>AI推測ログ</h3>
+            <label class="settingsRow">
+              <input
+                type="checkbox"
+                id="debugAiLog"
+              />
+              プロンプトとレスポンス（JSON）をコンソールに出力
             </label>
           </div>
         </div>
@@ -1105,12 +1196,11 @@
         hidden
         style="flex: 1"
       >
-        <div class="pills">
-          <span
-            class="pill"
-            id="aiStatus"
-            >AI推測: 開発中</span
-          >
+        <div class="pills" style="align-items: center; gap: 8px">
+          <span class="pill" id="aiStatus">AI推測: オフ</span>
+          <button type="button" id="aiSuggestBtn" class="tb previewBtn" title="選択テキストとページ情報から課題を推測">
+            AIで推測
+          </button>
         </div>
 
         <label>プロジェクト</label>
@@ -1121,6 +1211,10 @@
         >
           <option></option>
         </select>
+        <label class="useProjectForPageRow">
+          <input type="checkbox" id="useProjectForThisPage" />
+          <span>このページでは常にこのプロジェクトを使用する</span>
+        </label>
 
         <label>
           <input
@@ -1386,11 +1480,8 @@
 
         <div class="divider"></div>
 
-        <div
-          class="hint"
-          id="aiHint"
-        >
-          AI推測は開発中です。
+        <div class="hint" id="aiHint">
+          設定で「AI推測を有効にする」とAPIキーを保存すると、課題の件名・詳細・担当者・期日を自動推測できます。
         </div>
 
         <div class="actions">
@@ -1416,6 +1507,19 @@
     <script src="vendor/select2.min.js"></script>
     <script src="vendor/marked.min.js"></script>
     <script src="vendor/purify.min.js"></script>
-    <script src="sidepanel.js"></script>
+    <script src="js/constants.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/url-form.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/mention.js"></script>
+    <script src="js/selects.js"></script>
+    <script src="js/attachments.js"></script>
+    <script src="js/submit.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/ai.js"></script>
+    <script src="js/form.js"></script>
+    <script src="js/api-setup.js"></script>
+    <script src="js/main.js"></script>
   </body>
 </html>

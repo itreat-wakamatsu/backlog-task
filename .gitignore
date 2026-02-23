@@ -1,1 +1,5 @@
 /node_modules
+/.playwright-user-data
+/test-results
+/playwright-report
+/blob-report

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Backlog Quick Add",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Selected text -> open Side Panel form",
   "permissions": [
     "contextMenus",
@@ -10,13 +10,18 @@
     "sidePanel",
     "alarms",
     "windows",
-    "scripting"
+    "scripting",
+    "clipboardWrite",
+    "clipboardRead"
   ],
   "host_permissions": [
-    "https://itreatinc.backlog.com/*"
+    "https://*.backlog.com/*","https://*.backlog.jp/*","https://*.backlogtool.com/*",
+    "https://api.openai.com/*",
+    "https://generativelanguage.googleapis.com/*"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "icons": {
     "16": "images/icon16.png",
