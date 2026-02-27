@@ -21,7 +21,13 @@ async function getDraft() {
 function buildPrompt(draft, projectList, assigneesByProjectId, inferProjectAssignee, fixedProjectId) {
   const assigneeOnly = !!fixedProjectId;
   const includeProjectAssignee = assigneeOnly || (inferProjectAssignee && projectList?.length > 0);
-  const system = assigneeOnly
+
+  // 実行時点の現在日時（ユーザー環境の「今日」）をプロンプトに含める
+  const now = new Date();
+  const nowIso = now.toISOString(); // 例: 2026-02-24T10:23:45.123Z
+  const today = nowIso.slice(0, 10); // 例: 2026-02-24
+
+  const baseSystem = assigneeOnly
     ? `あなたはBacklogの課題作成を助けるアシスタントです。
 以下のウェブページの情報と、指定プロジェクトの担当者一覧をもとに、課題の件名・詳細・担当者・期日を推測し、指定のJSON形式のみで答えてください。
 プロジェクトは固定のため推測しません。projectKey は必ず空文字 "" にしてください。担当者のみ推測してください。
@@ -36,6 +42,10 @@ function buildPrompt(draft, projectList, assigneesByProjectId, inferProjectAssig
 以下のウェブページの情報をもとに、課題の件名・詳細・期日を推測し、指定のJSON形式のみで答えてください。
 プロジェクトと担当者は推測しないでください。projectKey と assigneeName は必ず空文字 "" にしてください。
 推測できない項目は空文字にしてください。期日は YYYY-MM-DD 形式のみ使用してください。`;
+
+  const system = `${baseSystem}
+
+現在日時は ${today} (${nowIso}) です。この日付を「今日」として扱ってください。`;
 
   let user = `ページタイトル: ${draft.pageTitle || "(なし)"}
 URL: ${draft.pageUrl || "(なし)"}
