@@ -60,18 +60,16 @@ async function getSelectionFromTab(tab, fallbackInfo) {
   }
   if (!text && chrome.scripting) {
     const results = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: () => (window.getSelection && window.getSelection().toString()) || "",
-      allFrames: true
+      target: { tabId: tab.id, allFrames: true },
+      func: () => (window.getSelection && window.getSelection().toString()) || ""
     }).catch(() => []);
     const found = results?.find((r) => r?.result && String(r.result).trim());
     if (found) text = String(found.result).trim();
   }
   if (!text && chrome.scripting) {
     const results = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: captureSelectionViaCopyInjected,
-      allFrames: true
+      target: { tabId: tab.id, allFrames: true },
+      func: captureSelectionViaCopyInjected
     }).catch(() => []);
     const found = results?.find((r) => r?.result && String(r.result).trim());
     if (found) text = String(found.result).trim();
