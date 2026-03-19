@@ -237,6 +237,9 @@ function getAiApiKey(settings) {
 /** フォーム表示後の自動AI実行を1回だけ行ったか */
 let _aiSuggestDidRunOnce = false;
 
+/** AI実行中フラグ（二重実行防止） */
+let _aiSuggestInProgress = false;
+
 /**
  * フォーム初期表示時用。AI有効かつドラフトにコンテキストがある場合に runAiSuggest を1回だけ実行する。
  * 拡張機能アイコンクリックで開いたとき（openedFrom === "action"）は自動実行しない。
@@ -253,11 +256,34 @@ async function maybeRunAiSuggestOnce() {
 }
 
 /**
+ * コンテキストメニューなど外部トリガーから呼ぶ用。
+ * _aiSuggestDidRunOnce フラグに関わらず、AI有効かつコンテキストがあれば実行する。
+ * @returns {Promise<boolean>} 実行した場合 true
+ */
+async function maybeRunAiSuggestForContextMenu() {
+  const settings = await getSettings();
+  if (!settings.aiEnabled || !getAiApiKey(settings)) return false;
+  const draft = await getDraft();
+  if (!draft || (!draft.selectedText?.trim() && !draft.pageUrl?.trim())) return false;
+  return runAiSuggest();
+}
+
+/**
  * AI自動入力を実行し、結果をフォームに反映する。
  * 設定が無効またはAPIキー未設定の場合は何もしない。
  * @returns {Promise<boolean>} 実行した場合 true
  */
 async function runAiSuggest() {
+  if (_aiSuggestInProgress) return false;
+  _aiSuggestInProgress = true;
+  try {
+    return await _runAiSuggestCore();
+  } finally {
+    _aiSuggestInProgress = false;
+  }
+}
+
+async function _runAiSuggestCore() {
   const settings = await getSettings();
   const apiKey = getAiApiKey(settings);
   if (!settings.aiEnabled || !apiKey) {

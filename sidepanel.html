@@ -29,12 +29,12 @@
       }
       /* ポップアップモード: 幅が狭い場合は適切な幅を設定 */
       html.popup-mode {
-        min-width: 500px;
+        min-width: 360px;
         max-width: 600px;
-        width: 500px;
+        /* width: 500px; */
       }
       body.popup-mode {
-        min-width: 500px;
+        min-width: 360px;
         max-width: 600px;
         width: 100%;
         box-sizing: border-box;
@@ -1596,7 +1596,6 @@
         hidden
         style="flex: 1"
       >
-        <div class="hint muted">最小入力で素早く登録できます。必要な項目だけ埋めて送信してください。</div>
         <div class="pills" style="align-items: center; gap: 8px">
           <span class="pill" id="aiStatus">AI自動入力: オフ</span>
           <button type="button" id="aiSuggestBtn" class="tb previewBtn" title="選択テキストとページ情報から課題を自動入力">
