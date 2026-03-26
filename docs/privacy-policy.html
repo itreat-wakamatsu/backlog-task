@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>プライバシーポリシー / Privacy Policy — Backlog Quick Add</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        line-height: 1.6;
+        max-width: 44rem;
+        margin: 0 auto;
+        padding: 1.5rem 1.25rem 3rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin-top: 0;
+      }
+      h2 {
+        font-size: 1.15rem;
+        margin-top: 2rem;
+      }
+      .lang-nav {
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+      }
+      .lang-nav a {
+        margin-right: 0.75rem;
+      }
+      ul {
+        padding-left: 1.25rem;
+      }
+      .note {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #ccc;
+      }
+      @media (prefers-color-scheme: dark) {
+        .note {
+          border-top-color: #444;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="lang-nav" aria-label="言語 / Language">
+      <a href="#ja">日本語</a>
+      <a href="#en">English</a>
+    </nav>
+
+    <section id="ja" lang="ja">
+      <h1>プライバシーポリシー</h1>
+      <p>
+        拡張機能: <strong>Backlog Quick Add</strong><br />
+        施行日: 2026年3月26日
+      </p>
+      <p>
+        本プライバシーポリシーは、ブラウザ拡張機能「Backlog Quick Add」（以下「<strong>本拡張機能</strong>」）が、利用時にどのように情報を取り扱うかを説明するものです。
+        本拡張機能は、閲覧中のウェブページから選択したテキストやページ情報を用いて <a href="https://backlog.com/" rel="noopener noreferrer">Nulab Backlog</a>（以下「<strong>Backlog</strong>」）へ課題を登録すること、および任意の入力補助のための生成 AI API の利用を可能にすることを目的として提供されています。
+      </p>
+
+      <h2>概要</h2>
+      <ul>
+        <li>お客様の個人情報を<strong>販売しません</strong>。</li>
+        <li>本拡張機能内に広告やアクセス解析用のトラッカーを<strong>組み込んでいません</strong>。</li>
+        <li>本拡張機能の公開者が、課題作成とは無関係な目的で<strong>独自のサーバーにお客様のデータを収集する仕組みはありません</strong>。通信はお客様のブラウザから、Backlog またはお客様が任意で利用する第三者の API（OpenAI、Google）へ直接行われます。</li>
+        <li>設定・API キー・下書き・キャッシュなどは、原則として <code>chrome.storage.local</code> を用いて<strong>端末内（お使いの Chrome プロファイル内）に保存</strong>されます。本拡張機能は <code>chrome.storage.sync</code> による Chrome アカウントへの同期を利用しません。</li>
+      </ul>
+
+      <h2>本拡張機能が取り扱う情報</h2>
+      <p>本拡張機能は、機能の提供に必要な範囲でのみデータを処理します。</p>
+      <ul>
+        <li>
+          <strong>閲覧中のウェブページに関する情報（お客様が本拡張機能を操作したとき）</strong><br />
+          ツールバーアイコン、右クリックメニュー、キーボードショートカットなどで本拡張機能を起動した際、<strong>そのときアクティブなタブ</strong>について、選択中のテキスト、ページの URL、ページタイトルを読み取り、課題の下書きやフォームに反映します。すべてのタブの閲覧履歴を常時収集するものではありません。
+        </li>
+        <li>
+          <strong>お客様が設定・入力した情報</strong><br />
+          Backlog のスペース URL、Backlog API キー、表示や動作に関する設定、課題フォームへの入力内容、下書き、URL ごとのデフォルトプロジェクトの対応、任意で設定する OpenAI または Google（Gemini）の API キーと AI 関連設定などです。
+        </li>
+        <li>
+          <strong>Backlog API から取得した情報（キャッシュ）</strong><br />
+          プロジェクト、課題種別、優先度、ユーザー（担当者・メンション用）など、課題作成フォームに必要な一覧データを Backlog の API から取得し、端末内にキャッシュします。定期的な更新（アラーム）およびお客様の手動更新に応じて再取得することがあります。
+        </li>
+        <li>
+          <strong>クリップボードに関する処理</strong><br />
+          一部のページでは、通常の方法で選択テキストを取得できない場合に、コピー操作に伴うテキストの読み取りを用いて選択内容を補完します。課題の添付として、お客様が貼り付けた画像データを扱うことがあります。
+        </li>
+      </ul>
+
+      <h2>Chrome のストレージ</h2>
+      <p>
+        本拡張機能が保存するデータの多くは <code>chrome.storage.local</code> に格納され、<strong>端末内に留まります</strong>。Chrome の設定から拡張機能のデータを消去する、本拡張機能をアンインストールする、または本拡張機能内の設定・フォームを編集・削除することにより、内容を変更または削除できます。
+      </p>
+
+      <h2>ネットワーク通信と第三者</h2>
+      <p>本拡張機能は、次の通信を行うことがあります。いずれも HTTPS を用います。</p>
+
+      <h3>Backlog（Nulab）</h3>
+      <p>
+        お客様が指定したスペースのドメイン（例: <code>*.backlog.com</code>、<code>*.backlog.jp</code>、<code>*.backlogtool.com</code>）に対し、API キー認証のもと REST API 経由で、課題の登録、マスタ情報の取得・検証などを行います。
+        取り扱いは <a href="https://nulab.com/privacy" rel="noopener noreferrer">Nulab のプライバシーポリシー</a> および Backlog の利用規約等に従います。
+      </p>
+
+      <h3>OpenAI（任意）</h3>
+      <p>
+        お客様が OpenAI の API キーを設定した場合、課題の件名・詳細などの入力補完のため、お客様が選択したテキストやページ情報などを <code>api.openai.com</code> に送信することがあります。
+        取り扱いは <a href="https://openai.com/policies/" rel="noopener noreferrer">OpenAI のポリシー</a> に従います。
+      </p>
+
+      <h3>Google（Gemini API、任意）</h3>
+      <p>
+        お客様が Google の API キーを設定した場合、同様の入力補完のため、<code>generativelanguage.googleapis.com</code> にデータを送信することがあります。
+        取り扱いは Google のプライバシーに関する文書（例: <a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google プライバシー ポリシー</a>）に従います。
+      </p>
+
+      <p>
+        これらの通信に伴い、各サービス提供者が IP アドレス等の標準的な技術情報を受け取る場合があります。詳細は各提供者のポリシーをご参照ください。
+      </p>
+
+      <h2>リモートコード</h2>
+      <p>
+        本拡張機能は、インターネット上から JavaScript 等のプログラムコードを取得して実行する用途には使用しません。API から受け取るのはデータ（例: JSON）であり、処理はパッケージに同梱されたコードのみで行います（Manifest V3 に準拠した実装です）。
+      </p>
+
+      <h2>権限とその理由（マニフェスト）</h2>
+      <ul>
+        <li><strong>activeTab</strong> — お客様が本拡張機能を操作した直後のアクティブなタブについて、選択テキストや URL・タイトルを読み取るため。</li>
+        <li><strong>alarms</strong> — Backlog のマスタ情報キャッシュを定期的に更新するため。</li>
+        <li><strong>clipboardRead / clipboardWrite</strong> — 一部のページで選択テキストを取得する際のコピー処理、または貼り付けに伴うクリップボードの扱いのため。</li>
+        <li><strong>contextMenus</strong> — 右クリックメニューから課題作成などを呼び出すため。</li>
+        <li><strong>scripting</strong> — コンテンツスクリプトで取得できない場合に限り、お客様の操作に応じてアクティブなタブ内で選択テキスト取得に必要な最小限の処理を行うため。</li>
+        <li><strong>sidePanel</strong> — 課題作成フォームをサイドパネルに表示するため。</li>
+        <li><strong>storage</strong> — 設定、API キー、下書き、キャッシュなどの保存・読み込みのため。</li>
+        <li><strong>windows</strong> — 設定により課題作成画面をポップアップウィンドウで開くため。</li>
+        <li>
+          <strong>コンテンツスクリプト（マニフェスト宣言）</strong> — 宣言された一致パターンに基づき、ページ上で選択テキストの取得などに協力します。Chrome のインストール画面では「すべてのウェブサイト上のデータの読取りと変更」などと表示されることがありますが、これは注入範囲に関する表示です。本拡張機能は、任意オリジンへの広範なネットワークアクセスを付与する <code>host_permissions</code> としての <code>&lt;all_urls&gt;</code> は要求していません。
+        </li>
+        <li>
+          <strong>ホスト権限</strong> — 上記の Backlog スペース、および任意設定時の OpenAI / Google（Gemini）API エンドポイントへの通信のため。
+        </li>
+      </ul>
+
+      <h2>データの保存期間</h2>
+      <p>
+        端末内のデータは、お客様が Chrome で拡張機能のデータを消去する、本拡張機能をアンインストールする、または本拡張機能内で編集・削除するまで保持されます。Backlog に登録された課題の保持は Backlog 側の設定および契約に従います。
+      </p>
+
+      <h2>お子様について</h2>
+      <p>本拡張機能はお子様を対象としたものではなく、故意にお子様から個人情報を収集することはありません。</p>
+
+      <h2>本ポリシーの変更</h2>
+      <p>
+        本拡張機能の動作や要件の変更に伴い、本プライバシーポリシーを更新することがあります。更新時には冒頭の施行日を改訂します。
+      </p>
+
+      <h2>お問い合わせ</h2>
+      <p>
+        本拡張機能に関するプライバシーに関するお問い合わせは、GitHub の Issue からご連絡ください。<a href="https://github.com/itreat-wakamatsu/backlog-task/issues" rel="noopener noreferrer">https://github.com/itreat-wakamatsu/backlog-task/issues</a>
+      </p>
+    </section>
+
+    <hr style="margin: 3rem 0" />
+
+    <section id="en" lang="en">
+      <h1>Privacy Policy</h1>
+      <p>
+        Extension: <strong>Backlog Quick Add</strong><br />
+        Effective date: March 26, 2026
+      </p>
+      <p>
+        This Privacy Policy describes how the Backlog Quick Add browser extension (“<strong>Extension</strong>”) handles information when you use it.
+        The Extension helps you create issues in <a href="https://backlog.com/" rel="noopener noreferrer">Nulab Backlog</a> (“<strong>Backlog</strong>”) using text you select on web pages and related page metadata, and optionally offers AI-assisted field completion via third-party APIs.
+      </p>
+
+      <h2>Summary</h2>
+      <ul>
+        <li>We do <strong>not</strong> sell your personal information.</li>
+        <li>We do <strong>not</strong> run advertising or analytics trackers inside the Extension.</li>
+        <li>The publisher does <strong>not</strong> operate a separate backend to collect your data for purposes unrelated to issue creation. Network requests are made from your browser directly to Backlog and, if you opt in, to OpenAI or Google APIs.</li>
+        <li>Settings, API keys, drafts, and caches are stored primarily in <code>chrome.storage.local</code> on <strong>your device</strong> (within your Chrome profile). The Extension does <strong>not</strong> use <code>chrome.storage.sync</code>.</li>
+      </ul>
+
+      <h2>Information the Extension processes</h2>
+      <p>The Extension processes data only as needed to provide its features:</p>
+      <ul>
+        <li>
+          <strong>Web page context when you invoke the Extension</strong><br />
+          When you use the toolbar button, context menu, or keyboard shortcut, the Extension reads the <strong>currently active tab’s</strong> selected text, URL, and page title to prefill a draft issue form. It does not continuously collect your full browsing history.
+        </li>
+        <li>
+          <strong>Information you configure or enter</strong><br />
+          For example: your Backlog space URL, Backlog API key, UI and behavior settings, form fields and drafts, URL-to-default-project mappings, and—if you choose—OpenAI or Google (Gemini) API keys and AI-related settings.
+        </li>
+        <li>
+          <strong>Data fetched from Backlog (cached locally)</strong><br />
+          Project lists, issue types, priorities, users (for assignees and mentions), and similar data are retrieved via the Backlog API and cached on your device. The Extension may refresh this data on a schedule (alarms) or when you request a refresh.
+        </li>
+        <li>
+          <strong>Clipboard-related handling</strong><br />
+          On some pages where ordinary selection APIs are insufficient, the Extension may use copy-related flows to capture selected text. For attachments, the Extension may handle images you paste into the form.
+        </li>
+      </ul>
+
+      <h2>Chrome storage</h2>
+      <p>
+        Most persisted data is stored with <code>chrome.storage.local</code> and remains on <strong>your device</strong>. You can remove or change it by clearing extension data in Chrome, uninstalling the Extension, or editing/deleting content inside the Extension.
+      </p>
+
+      <h2>Network requests and third parties</h2>
+      <p>The Extension may make the following requests over HTTPS:</p>
+
+      <h3>Backlog (Nulab)</h3>
+      <p>
+        To your configured Backlog host (e.g. <code>*.backlog.com</code>, <code>*.backlog.jp</code>, <code>*.backlogtool.com</code>), using your API key, to create issues, validate credentials, and fetch or refresh master data.
+        Processing is governed by <a href="https://nulab.com/privacy" rel="noopener noreferrer">Nulab’s privacy policy</a> and Backlog’s terms.
+      </p>
+
+      <h3>OpenAI (optional)</h3>
+      <p>
+        If you configure an OpenAI API key, the Extension may send selected text, page metadata, and related context to <code>api.openai.com</code> to suggest issue fields.
+        See <a href="https://openai.com/policies/" rel="noopener noreferrer">OpenAI’s policies</a>.
+      </p>
+
+      <h3>Google (Gemini API, optional)</h3>
+      <p>
+        If you configure a Google API key, the Extension may send similar context to <code>generativelanguage.googleapis.com</code>.
+        See Google’s privacy documentation (e.g. the <a href="https://policies.google.com/privacy" rel="noopener noreferrer">Google Privacy Policy</a>).
+      </p>
+
+      <p>
+        Service providers may receive standard technical information such as IP addresses as part of HTTPS requests. Refer to each provider’s policy for details.
+      </p>
+
+      <h2>Remote code</h2>
+      <p>
+        The Extension does not fetch and execute remote JavaScript or other executable code. API responses are treated as data (e.g. JSON) and processed only by code shipped inside the Extension package, consistent with Manifest V3.
+      </p>
+
+      <h2>Permissions (why they exist)</h2>
+      <ul>
+        <li><strong>activeTab</strong> — Read selected text, URL, and title from the active tab right after you invoke the Extension.</li>
+        <li><strong>alarms</strong> — Periodically refresh cached Backlog master data.</li>
+        <li><strong>clipboardRead / clipboardWrite</strong> — Support selection capture via copy flows and pasted content where applicable.</li>
+        <li><strong>contextMenus</strong> — Provide context-menu entries such as creating an issue.</li>
+        <li><strong>scripting</strong> — When needed, run minimal in-tab logic on user action to obtain selected text.</li>
+        <li><strong>sidePanel</strong> — Show the issue form in Chrome’s side panel.</li>
+        <li><strong>storage</strong> — Save and load settings, keys, drafts, and caches.</li>
+        <li><strong>windows</strong> — Open the issue UI in a popup window when that mode is enabled.</li>
+        <li>
+          <strong>Content scripts (declared in the manifest)</strong> — Assist with reading selection on matching pages. Chrome’s install prompt may describe broad site access; that reflects where scripts may run. The Extension does <strong>not</strong> request broad <code>&lt;all_urls&gt;</code> <code>host_permissions</code> for arbitrary network access.
+        </li>
+        <li><strong>Host permissions</strong> — Communicate with your Backlog space and, if configured, OpenAI and Google (Gemini) API endpoints.</li>
+      </ul>
+
+      <h2>Data retention</h2>
+      <p>
+        Local data remains until you clear extension data, uninstall the Extension, or change it inside the Extension. Issues you create are retained under your Backlog workspace settings and agreements.
+      </p>
+
+      <h2>Children</h2>
+      <p>The Extension is not directed at children, and we do not knowingly collect personal information from children.</p>
+
+      <h2>Changes to this policy</h2>
+      <p>
+        We may update this Privacy Policy when the Extension’s behavior or requirements change. The effective date at the top will be revised when updates are published.
+      </p>
+
+      <h2>Contact</h2>
+      <p>
+        For privacy questions about this Extension, please open an issue on GitHub:<br />
+        <a href="https://github.com/itreat-wakamatsu/backlog-task/issues" rel="noopener noreferrer">https://github.com/itreat-wakamatsu/backlog-task/issues</a>
+      </p>
+    </section>
+  </body>
+</html>

@@ -6,6 +6,7 @@
     "@playwright/test": "^1.49.0"
   },
   "scripts": {
+    "pack:store": "node pack-store.mjs",
     "convert-icon": "node convert-icon.mjs",
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test e2e/smoke.spec.ts",
