@@ -1616,12 +1616,21 @@
           <span>このページでは常にこのプロジェクトを使用する</span>
         </label>
 
+        <label class="fieldLegend" style="margin-top: 4px">種別</label>
+        <select
+          id="issueType"
+          style="width: 100%"
+          tabindex="2"
+        >
+          <option>プロジェクトを選択してください</option>
+        </select>
+
         <label>
           <span class="fieldLegend">件名</span>
           <input
             id="title"
             placeholder="件名"
-            tabindex="2"
+            tabindex="3"
           />
         </label>
 
@@ -1634,7 +1643,7 @@
                 id="description"
                 class="editorTextarea"
                 placeholder="課題の詳細（@を入力してメンバーに通知）"
-                tabindex="3"
+                tabindex="4"
               ></textarea>
               <div
                 id="preview"
@@ -1869,13 +1878,31 @@
         >
           <option>プロジェクトを選択してください</option>
         </select>
+
+        <label class="fieldLegend" style="margin-top: 4px">カテゴリ</label>
+        <select
+          id="category"
+          style="width: 100%"
+          tabindex="5"
+        >
+          <option>プロジェクトを選択してください</option>
+        </select>
+
         <div class="row">
+          <label>
+            開始日
+            <input
+              id="startDate"
+              type="date"
+              tabindex="6"
+            />
+          </label>
           <label>
             期日
             <input
               id="due"
               type="date"
-              tabindex="5"
+              tabindex="7"
             />
           </label>
         </div>
@@ -1896,7 +1923,7 @@
           <button
             id="submit"
             class="primary btnSubmit"
-            tabindex="6"
+            tabindex="8"
           >
             送信
           </button>

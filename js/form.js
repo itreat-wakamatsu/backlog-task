@@ -37,6 +37,8 @@ async function applyUrlProjectFromDraft() {
   $("#project").val(projectId).trigger("change");
   if (typeof saveRecentProject === "function") await saveRecentProject(projectId);
   if (typeof buildAssigneeSelect === "function") await buildAssigneeSelect(projectId);
+  if (typeof buildIssueTypeSelect === "function") buildIssueTypeSelect(projectId);
+  if (typeof buildCategorySelect === "function") buildCategorySelect(projectId);
   if (typeof buildMentionUsersForProject === "function") buildMentionUsersForProject(projectId);
 }
 
