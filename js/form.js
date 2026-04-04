@@ -139,6 +139,14 @@ async function applyDraftToForm() {
     if (typeof renderPreview === "function") renderPreview();
   }
 
+  // Google Docs ページから開いた場合、テキストが取得できていなければヒントを表示
+  const pageUrl = draft?.pageUrl ?? "";
+  const googleDocsHint = document.getElementById("googleDocsHint");
+  if (googleDocsHint) {
+    const isGoogleDocs = pageUrl.includes("docs.google.com");
+    googleDocsHint.hidden = !(isGoogleDocs && !text);
+  }
+
   if (fromAction) {
     history.replaceState(null, "", location.pathname);
   }
