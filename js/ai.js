@@ -15,10 +15,11 @@ async function getDraft() {
  * @param {Object} draft - { selectedText, pageUrl, pageTitle }
  * @param {Array} projectList - [{ id, projectKey, name }]
  * @param {Object} assigneesByProjectId - { [projectId]: [{ id, name }] }
+ * @param {Object} categoriesByProjectId - { [projectId]: [{ id, name }] }
  * @param {boolean} inferProjectAssignee - プロジェクト・担当者を推測するか
  * @param {string} [fixedProjectId] - このページでプロジェクト固定時はその projectId（担当者のみ推測）
  */
-function buildPrompt(draft, projectList, assigneesByProjectId, inferProjectAssignee, fixedProjectId) {
+function buildPrompt(draft, projectList, assigneesByProjectId, categoriesByProjectId, inferProjectAssignee, fixedProjectId) {
   const assigneeOnly = !!fixedProjectId;
   const includeProjectAssignee = assigneeOnly || (inferProjectAssignee && projectList?.length > 0);
 
@@ -69,10 +70,31 @@ ${draft.selectedText || "(なし)"}`;
     }
   }
 
+  // カテゴリ一覧をプロンプトに追加
+  if (assigneeOnly && fixedProjectId) {
+    const cats = categoriesByProjectId?.[String(fixedProjectId)] ?? [];
+    if (cats.length) {
+      user += `\n\n【このプロジェクトのカテゴリ一覧（categoryName はこの一覧から選択してください）】\n${cats.map((c) => c.name).join(", ")}`;
+    }
+  } else if (includeProjectAssignee) {
+    let hasCats = false;
+    let catLines = "";
+    for (const p of projectList) {
+      const cats = categoriesByProjectId?.[String(p.id)] ?? [];
+      if (cats.length) {
+        hasCats = true;
+        catLines += `\nプロジェクト ${p.projectKey}: ${cats.map((c) => c.name).join(", ")}`;
+      }
+    }
+    if (hasCats) {
+      user += `\n\n【各プロジェクトのカテゴリ一覧（categoryName はこの一覧から選択してください）】${catLines}`;
+    }
+  }
+
   user += `
 
 上記をもとに、次のJSON形式のみで答えてください。他の説明は不要です。配列にはせず、単一のJSONで答えてください。
-{"summary":"件名（短いタイトル）","description":"課題の詳細（Markdown可）","projectKey":"プロジェクトのprojectKeyまたは空","assigneeName":"担当者名または空","dueDate":"YYYY-MM-DDまたは空"}`;
+{"summary":"件名（短いタイトル）","description":"課題の詳細（Markdown可）","projectKey":"プロジェクトのprojectKeyまたは空","assigneeName":"担当者名または空","categoryName":"カテゴリ名または空","startDate":"YYYY-MM-DDまたは空","dueDate":"YYYY-MM-DDまたは空"}`;
 
   return { system, user };
 }
@@ -135,6 +157,8 @@ async function applyToForm(result, applyProjectAssignee, pageUrl = "", fixedProj
       $("#project").val(projectId).trigger("change");
       BQA.currentProjectId = projectId;
       if (typeof buildAssigneeSelect === "function") await buildAssigneeSelect(projectId);
+      if (typeof buildIssueTypeSelect === "function") buildIssueTypeSelect(projectId);
+      if (typeof buildCategorySelect === "function") buildCategorySelect(projectId);
       if (typeof saveRecentProject === "function") await saveRecentProject(projectId);
       if (typeof buildMentionUsersForProject === "function") buildMentionUsersForProject(projectId);
     }
@@ -149,6 +173,16 @@ async function applyToForm(result, applyProjectAssignee, pageUrl = "", fixedProj
     }
   }
 
+  // カテゴリの適用
+  if (result.categoryName != null && String(result.categoryName).trim() && projectId) {
+    const categories = BQA.cache?.projectCategoriesByProjectId?.[String(projectId)] ?? [];
+    const catName = String(result.categoryName).trim();
+    const cat = categories.find((c) => c.name === catName);
+    if (cat && $("#category").data("select2")) {
+      $("#category").val(String(cat.id)).trigger("change");
+    }
+  }
+
   if (result.description != null && descEl) {
     let desc = String(result.description).trim();
     desc += "\n\n※ AIによる自動生成\n作成したページ：" + (pageUrl?.trim() || "(なし)");
@@ -156,6 +190,11 @@ async function applyToForm(result, applyProjectAssignee, pageUrl = "", fixedProj
     if (typeof renderPreview === "function") renderPreview();
   }
   if (result.summary != null && titleEl) titleEl.value = String(result.summary).trim();
+
+  // 開始日の適用
+  const startEl = document.getElementById("startDate");
+  if (result.startDate != null && startEl && isValidDateString(result.startDate)) startEl.value = String(result.startDate).trim();
+
   if (result.dueDate != null && dueEl && isValidDateString(result.dueDate)) dueEl.value = String(result.dueDate).trim();
 }
 
@@ -319,13 +358,14 @@ async function _runAiSuggestCore() {
     name: p.name
   }));
   const assigneesByProjectId = BQA.cache?.projectUsersByProjectId ?? {};
+  const categoriesByProjectId = BQA.cache?.projectCategoriesByProjectId ?? {};
   const inferProjectAssignee = settings.aiSuggestProjectAssignee !== false;
 
   updateAiStatus("AI自動入力: 実行中…");
   const startMs = performance.now();
 
   try {
-    const { system, user } = buildPrompt(draft, projectList, assigneesByProjectId, inferProjectAssignee, fixedProjectId);
+    const { system, user } = buildPrompt(draft, projectList, assigneesByProjectId, categoriesByProjectId, inferProjectAssignee, fixedProjectId);
     const messages = [
       { role: "system", content: system },
       { role: "user", content: user }
@@ -400,20 +440,39 @@ function toUserFriendlyAiError(rawMessage) {
 }
 
 /**
- * 設定に応じて #aiStatus と #aiHint の初期表示を更新する。フォーム表示時に呼ぶ。
+ * 設定に応じて #aiStatus と #aiHint、#aiSuggestBtn の表示を更新する。フォーム表示時に呼ぶ。
  */
 async function updateAiStatusFromSettings() {
   const statusEl = document.getElementById("aiStatus");
   const hintEl = document.getElementById("aiHint");
+  const btnEl = document.getElementById("aiSuggestBtn");
   if (!statusEl && !hintEl) return;
   const settings = await getSettings();
-  if (!settings.aiEnabled || !getAiApiKey(settings)) {
-    if (statusEl) statusEl.textContent = "AI自動入力: オフ";
-    if (hintEl) hintEl.textContent = "設定で「AI自動入力を有効にする」とAPIキーを保存すると、課題の件名・詳細・担当者・期日を自動入力できます。";
-    return;
+  const hasKey = !!getAiApiKey(settings);
+  const isReady = settings.aiEnabled && hasKey;
+
+  if (!isReady) {
+    if (statusEl) {
+      statusEl.textContent = settings.aiEnabled && !hasKey ? "AI自動入力: APIキー未設定" : "AI自動入力: オフ";
+    }
+    if (hintEl) hintEl.textContent = "設定で「AI自動入力を有効にする」とAPIキーを保存すると、課題の件名・詳細・担当者・カテゴリ・期日等を自動入力できます。";
+  } else {
+    if (statusEl) statusEl.textContent = "AI自動入力: 利用可能";
+    if (hintEl) hintEl.textContent = "選択テキストとページ情報から課題を自動入力します。「AIで自動入力」ボタンで再実行できます。";
   }
-  if (statusEl) statusEl.textContent = "AI自動入力: 利用可能";
-  if (hintEl) hintEl.textContent = "選択テキストとページ情報から課題を自動入力します。「AIで自動入力」ボタンで再実行できます。";
+
+  // ボタンは常に表示するが、未設定時はスタイルで区別（クリック時にメッセージ表示）
+  if (btnEl) btnEl.dataset.aiReady = isReady ? "1" : "0";
 }
 
-document.getElementById("aiSuggestBtn")?.addEventListener("click", () => runAiSuggest());
+document.getElementById("aiSuggestBtn")?.addEventListener("click", async () => {
+  const settings = await getSettings();
+  if (!settings.aiEnabled || !getAiApiKey(settings)) {
+    const msg = !getAiApiKey(settings)
+      ? "AI自動入力を使用するには、設定でAPIキーを入力してください。"
+      : "AI自動入力が無効です。設定で「AI自動入力を有効にする」をオンにしてください。";
+    if (typeof setTopNotification === "function") setTopNotification(msg, true);
+    return;
+  }
+  runAiSuggest();
+});
