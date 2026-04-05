@@ -40,11 +40,14 @@ function openSidePanelOrPopup(tab, info) {
   chrome.storage.local.get([SETTINGS_KEY]).then(async (obj) => {
     const settings = obj[SETTINGS_KEY] ?? {};
 
-    const { text, url, title } = await getSelectionFromTab(tab, info);
+    const { text, url, title, surroundingBefore, surroundingAfter, documentBeginning } = await getSelectionFromTab(tab, info);
     const draft = {
       selectedText: text,
       pageUrl: url,
       pageTitle: title,
+      surroundingBefore,
+      surroundingAfter,
+      documentBeginning,
       createdAt: Date.now(),
       openedFrom: "contextMenu"
     };
@@ -182,12 +185,15 @@ export function setupActionClick(getSelectionFromTabRef) {
     chrome.storage.local.set({ draft: baseDraft });
     chrome.sidePanel.setOptions({ tabId: tab.id, path: "sidepanel.html" }).catch(() => {});
 
-    getSelectionFromTabRef(tab).then(({ text, url, title }) => {
+    getSelectionFromTabRef(tab).then(({ text, url, title, surroundingBefore, surroundingAfter, documentBeginning }) => {
       const draft = {
         ...baseDraft,
         selectedText: text ?? "",
         pageUrl: url ?? tab.url ?? "",
-        pageTitle: title ?? tab.title ?? ""
+        pageTitle: title ?? tab.title ?? "",
+        surroundingBefore: surroundingBefore ?? "",
+        surroundingAfter: surroundingAfter ?? "",
+        documentBeginning: documentBeginning ?? ""
       };
       chrome.storage.local.set({ draft });
       chrome.runtime.sendMessage({ type: "DRAFT_UPDATED" }).catch(() => {});
@@ -205,9 +211,9 @@ export function setupCommands(getSelectionFromTabRef) {
     if (settings.openInPopup) {
       const baseDraft = { selectedText: "", pageUrl: tab.url ?? "", pageTitle: tab.title ?? "", createdAt: Date.now(), openedFrom: "shortcut" };
       chrome.storage.local.set({ draft: baseDraft });
-      getSelectionFromTabRef(tab).then(({ text, url, title }) => {
+      getSelectionFromTabRef(tab).then(({ text, url, title, surroundingBefore, surroundingAfter, documentBeginning }) => {
         chrome.storage.local.set({
-          draft: { ...baseDraft, selectedText: text ?? "", pageUrl: url ?? tab.url ?? "", pageTitle: title ?? tab.title ?? "" }
+          draft: { ...baseDraft, selectedText: text ?? "", pageUrl: url ?? tab.url ?? "", pageTitle: title ?? tab.title ?? "", surroundingBefore: surroundingBefore ?? "", surroundingAfter: surroundingAfter ?? "", documentBeginning: documentBeginning ?? "" }
         });
         chrome.windows.create({
           url: chrome.runtime.getURL("sidepanel.html?popup=true"),
@@ -219,9 +225,9 @@ export function setupCommands(getSelectionFromTabRef) {
       return;
     }
     if (settings.openInNewTab) {
-      const { text, url, title } = await getSelectionFromTabRef(tab);
+      const { text, url, title, surroundingBefore, surroundingAfter, documentBeginning } = await getSelectionFromTabRef(tab);
       chrome.storage.local.set({
-        draft: { selectedText: text ?? "", pageUrl: url ?? tab.url ?? "", pageTitle: title ?? tab.title ?? "", createdAt: Date.now(), openedFrom: "shortcut" }
+        draft: { selectedText: text ?? "", pageUrl: url ?? tab.url ?? "", pageTitle: title ?? tab.title ?? "", surroundingBefore: surroundingBefore ?? "", surroundingAfter: surroundingAfter ?? "", documentBeginning: documentBeginning ?? "", createdAt: Date.now(), openedFrom: "shortcut" }
       });
       chrome.tabs.create({ url: chrome.runtime.getURL("sidepanel.html") });
       chrome.runtime.sendMessage({ type: "DRAFT_UPDATED" }).catch(() => {});
@@ -240,8 +246,8 @@ export function setupCommands(getSelectionFromTabRef) {
     chrome.storage.local.set({ draft: baseDraft });
     chrome.sidePanel.setOptions({ tabId: tab.id, path: "sidepanel.html" }).catch(() => {});
 
-    getSelectionFromTabRef(tab).then(({ text, url, title }) => {
-      chrome.storage.local.set({ draft: { ...baseDraft, selectedText: text ?? "", pageUrl: url ?? tab.url ?? "", pageTitle: title ?? tab.title ?? "" } });
+    getSelectionFromTabRef(tab).then(({ text, url, title, surroundingBefore, surroundingAfter, documentBeginning }) => {
+      chrome.storage.local.set({ draft: { ...baseDraft, selectedText: text ?? "", pageUrl: url ?? tab.url ?? "", pageTitle: title ?? tab.title ?? "", surroundingBefore: surroundingBefore ?? "", surroundingAfter: surroundingAfter ?? "", documentBeginning: documentBeginning ?? "" } });
       chrome.runtime.sendMessage({ type: "DRAFT_UPDATED" }).catch(() => {});
     });
   });

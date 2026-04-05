@@ -29,6 +29,54 @@ document.addEventListener("copy", () => {
   }, 80);
 });
 
+// Google Docs で右クリック（コンテキストメニュー）が発生したとき、
+// ユーザーの操作を起点として execCommand("copy") を呼ぶことで
+// isTrusted=true の copy イベントが発火し、選択テキストがクリップボードに入る。
+// これにより手動 Ctrl+C なしでも選択テキストを取得できる。
+document.addEventListener("contextmenu", () => {
+  if (!isGoogleDocsContext()) return;
+  try { document.execCommand("copy"); } catch (_) {}
+});
+
+/**
+ * Google Docs のドキュメント本文を .kix-paragraphrenderer から取得する。
+ * canvas ベース描画だが accessibility ツリーにテキストが含まれている場合がある。
+ */
+function extractGoogleDocsText(maxChars = 3000) {
+  const paragraphs = document.querySelectorAll(".kix-paragraphrenderer");
+  if (paragraphs.length > 0) {
+    const text = Array.from(paragraphs)
+      .map((p) => (p.textContent || "").trim())
+      .filter(Boolean)
+      .join("\n");
+    if (text.trim()) return text.slice(0, maxChars);
+  }
+  return (document.body?.innerText || "").trim().slice(0, maxChars);
+}
+
+/**
+ * 現在の DOM 選択の前後テキストを返す。
+ * Google Docs では window.getSelection() が機能しないため空を返す。
+ */
+function getSelectionSurroundings(charsBefore = 500, charsAfter = 500) {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return { before: "", after: "" };
+  try {
+    const range = sel.getRangeAt(0);
+    const beforeRange = document.createRange();
+    beforeRange.selectNodeContents(document.body);
+    beforeRange.setEnd(range.startContainer, range.startOffset);
+    const before = beforeRange.toString().slice(-charsBefore);
+    const afterRange = document.createRange();
+    afterRange.selectNodeContents(document.body);
+    afterRange.setStart(range.endContainer, range.endOffset);
+    const after = afterRange.toString().slice(0, charsAfter);
+    return { before, after };
+  } catch (_) {
+    return { before: "", after: "" };
+  }
+}
+
 async function getSelectionText() {
   // --- 通常ページ: 標準 DOM 選択 ---
   const domSelection = window.getSelection()?.toString() ?? "";
@@ -46,7 +94,7 @@ async function getSelectionText() {
     }
   } catch (_) {}
 
-  // 2) copy イベントでキャッシュしたテキスト（Ctrl+C 済みの場合）
+  // 2) copy イベントでキャッシュしたテキスト（Ctrl+C 済みまたは contextmenu 経由の場合）
   if (_googleDocsLastCopied) return _googleDocsLastCopied;
 
   // 3) クリップボードを直接読み取る（content script は clipboardRead 権限を持つ）
@@ -60,12 +108,44 @@ async function getSelectionText() {
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.type === "GET_SELECTION_TEXT") {
-    getSelectionText().then((text) => {
+    (async () => {
+      const text = await getSelectionText();
+
+      let surroundingBefore = "";
+      let surroundingAfter = "";
+      let documentBeginning = "";
+
+      if (isGoogleDocsContext()) {
+        // Google Docs: ドキュメント全体テキストから先頭・前後を取得
+        const fullDoc = extractGoogleDocsText(10000);
+        documentBeginning = fullDoc.slice(0, 1500);
+        if (text) {
+          const idx = fullDoc.indexOf(text);
+          if (idx !== -1) {
+            surroundingBefore = fullDoc.slice(Math.max(0, idx - 500), idx);
+            surroundingAfter = fullDoc.slice(idx + text.length, idx + text.length + 500);
+          }
+        }
+      } else {
+        // 通常ページ: Range API で前後テキストを取得
+        const surroundings = getSelectionSurroundings(500, 500);
+        surroundingBefore = surroundings.before;
+        surroundingAfter = surroundings.after;
+        documentBeginning = (document.body?.innerText || "").trim().slice(0, 1500);
+      }
+
       sendResponse({
         ok: true,
-        meta: { text, url: location.href, title: document.title }
+        meta: {
+          text,
+          url: location.href,
+          title: document.title,
+          surroundingBefore,
+          surroundingAfter,
+          documentBeginning
+        }
       });
-    });
+    })();
   }
   return true; // 非同期 sendResponse のためチャンネルを開いたまま
 });

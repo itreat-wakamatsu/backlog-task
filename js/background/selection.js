@@ -16,6 +16,9 @@ export async function getSelectionFromTab(tab, fallbackInfo) {
   let text = "";
   let url = tab?.url ?? "";
   let title = tab?.title ?? "";
+  let surroundingBefore = "";
+  let surroundingAfter = "";
+  let documentBeginning = "";
 
   // Step 1: content script に問い合わせ（Google Docs 対応含む）
   const res = await chrome.tabs.sendMessage(tab.id, { type: "GET_SELECTION_TEXT" }).catch(() => null);
@@ -23,6 +26,9 @@ export async function getSelectionFromTab(tab, fallbackInfo) {
     text = res.meta.text ?? "";
     url = res.meta.url ?? url;
     title = res.meta.title ?? title;
+    surroundingBefore = res.meta.surroundingBefore ?? "";
+    surroundingAfter = res.meta.surroundingAfter ?? "";
+    documentBeginning = res.meta.documentBeginning ?? "";
   }
 
   // Step 2: Chrome コンテキストメニューの selectionText（標準 HTML テキスト選択時に有効）
@@ -42,5 +48,5 @@ export async function getSelectionFromTab(tab, fallbackInfo) {
     if (found) text = String(found.result).trim();
   }
 
-  return { text, url, title };
+  return { text, url, title, surroundingBefore, surroundingAfter, documentBeginning };
 }

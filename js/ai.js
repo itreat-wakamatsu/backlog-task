@@ -53,6 +53,19 @@ URL: ${draft.pageUrl || "(なし)"}
 選択テキスト:
 ${draft.selectedText || "(なし)"}`;
 
+  // ドキュメント先頭（プロジェクト・担当者推測の手がかりになる議事録タイトル・参加者情報等を含む）
+  if (draft.documentBeginning?.trim()) {
+    user += `\n\n【ドキュメント先頭（最初の約1500文字）】\n${draft.documentBeginning.trim()}`;
+  }
+
+  // 選択箇所の前後テキスト（文脈把握に活用）
+  if (draft.surroundingBefore?.trim() || draft.surroundingAfter?.trim()) {
+    user += `\n\n【選択箇所の前後テキスト】`;
+    if (draft.surroundingBefore?.trim()) user += `\n---前---\n${draft.surroundingBefore.trim()}`;
+    user += `\n---選択テキスト---`;
+    if (draft.surroundingAfter?.trim()) user += `\n---後---\n${draft.surroundingAfter.trim()}`;
+  }
+
   if (assigneeOnly) {
     const users = assigneesByProjectId?.[String(fixedProjectId)] ?? [];
     const names = users.map((u) => u.name).filter(Boolean);
