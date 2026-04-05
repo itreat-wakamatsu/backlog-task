@@ -86,8 +86,10 @@ export async function addIssue(issueData) {
     priorityId: issueData.priorityId
   };
   if (issueData.description) params.description = issueData.description;
+  if (issueData.startDate) params.startDate = issueData.startDate;
   if (issueData.dueDate) params.dueDate = issueData.dueDate;
   if (issueData.assigneeId) params.assigneeId = issueData.assigneeId;
+  if (issueData.categoryId?.length) params["categoryId[]"] = issueData.categoryId;
   if (issueData.attachmentId?.length) params["attachmentId[]"] = issueData.attachmentId;
   if (issueData.notifiedUserId?.length) params["notifiedUserId[]"] = issueData.notifiedUserId;
 

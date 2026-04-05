@@ -19,6 +19,74 @@ function resetAssigneeSelect() {
   $("#assignee").prop("disabled", true);
 }
 
+function resetIssueTypeSelect() {
+  if ($("#issueType").data("select2")) {
+    $("#issueType").select2("destroy");
+  }
+  $("#issueType").empty().select2({
+    data: [],
+    placeholder: "プロジェクトを選択してください",
+    allowClear: false,
+    minimumResultsForSearch: -1
+  });
+  $("#issueType").prop("disabled", true);
+}
+
+function resetCategorySelect() {
+  if ($("#category").data("select2")) {
+    $("#category").select2("destroy");
+  }
+  $("#category").empty().select2({
+    data: [],
+    placeholder: "プロジェクトを選択してください",
+    allowClear: true,
+    minimumResultsForSearch: -1
+  });
+  $("#category").prop("disabled", true);
+}
+
+function buildIssueTypeSelect(projectId) {
+  const issueTypes = BQA.cache?.projectIssueTypesByProjectId?.[projectId] ?? [];
+  const data = issueTypes.map(t => ({ id: t.id, text: t.name }));
+
+  if ($("#issueType").data("select2")) {
+    $("#issueType").select2("destroy");
+  }
+
+  $("#issueType").empty().select2({
+    data,
+    placeholder: "種別を選択",
+    allowClear: false,
+    minimumResultsForSearch: -1
+  });
+  $("#issueType").prop("disabled", false);
+
+  // 最初の種別を自動選択
+  if (data.length > 0) {
+    $("#issueType").val(String(data[0].id)).trigger("change");
+  } else {
+    $("#issueType").val(null).trigger("change");
+  }
+}
+
+function buildCategorySelect(projectId) {
+  const categories = BQA.cache?.projectCategoriesByProjectId?.[projectId] ?? [];
+  const data = categories.map(c => ({ id: c.id, text: c.name }));
+
+  if ($("#category").data("select2")) {
+    $("#category").select2("destroy");
+  }
+
+  $("#category").empty().select2({
+    data,
+    placeholder: "カテゴリを選択 (任意)",
+    allowClear: true,
+    minimumResultsForSearch: -1
+  });
+  $("#category").prop("disabled", false);
+  $("#category").val(null).trigger("change");
+}
+
 async function buildProjectSelect(openOnInit = true) {
   const recent = await getRecentProjects();
   const projects = (BQA.cache?.projects ?? []);
@@ -47,12 +115,16 @@ async function buildProjectSelect(openOnInit = true) {
     BQA.currentProjectId = projectId;
     await saveRecentProject(projectId);
     await buildAssigneeSelect(projectId);
+    buildIssueTypeSelect(projectId);
+    buildCategorySelect(projectId);
     buildMentionUsersForProject(projectId);
   });
 
   $("#project").on("select2:clear", () => {
     BQA.currentProjectId = null;
     resetAssigneeSelect();
+    resetIssueTypeSelect();
+    resetCategorySelect();
   });
 
   const focusSearchInput = () => {

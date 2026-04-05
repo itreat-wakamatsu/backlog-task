@@ -31,6 +31,9 @@ document.getElementById("submit")?.addEventListener("click", async () => {
   const title = (document.getElementById("title")?.value ?? "").trim();
   const description = document.getElementById("description")?.value ?? "";
   const assigneeVal = $("#assignee").val();
+  const issueTypeVal = $("#issueType").val();
+  const categoryVal = $("#category").val();
+  const startVal = document.getElementById("startDate")?.value ?? "";
   const dueVal = document.getElementById("due")?.value ?? "";
 
   if (!projectVal) {
@@ -45,7 +48,7 @@ document.getElementById("submit")?.addEventListener("click", async () => {
   const projectId = Number(projectVal);
   const issueTypes = BQA.cache?.projectIssueTypesByProjectId?.[String(projectId)] ?? [];
   const priorities = BQA.cache?.priorities ?? [];
-  const issueTypeId = issueTypes[0]?.id;
+  const issueTypeId = issueTypeVal ? Number(issueTypeVal) : issueTypes[0]?.id;
   const priorityId = priorities.find(p => p.name === "中")?.id ?? priorities[0]?.id ?? 3;
 
   if (!issueTypeId) {
@@ -72,6 +75,8 @@ document.getElementById("submit")?.addEventListener("click", async () => {
         issueTypeId,
         priorityId,
         assigneeId: assigneeVal ? Number(assigneeVal) : undefined,
+        categoryId: categoryVal ? [Number(categoryVal)] : undefined,
+        startDate: startVal || undefined,
         dueDate: dueVal || undefined,
         attachmentId: attachedFiles.length ? "(添付ファイルあり・アップロードはスキップ)" : undefined,
         notifiedUserId: notifiedUserIds.length ? notifiedUserIds : undefined
@@ -82,6 +87,8 @@ document.getElementById("submit")?.addEventListener("click", async () => {
         issueTypeId,
         priorityId,
         description: issueData.description,
+        "categoryId[]": issueData.categoryId,
+        startDate: issueData.startDate,
         dueDate: issueData.dueDate,
         assigneeId: issueData.assigneeId,
         "attachmentId[]": attachedFiles.length ? "(スキップ)" : undefined,
@@ -112,6 +119,8 @@ document.getElementById("submit")?.addEventListener("click", async () => {
         issueTypeId,
         priorityId,
         assigneeId: assigneeVal ? Number(assigneeVal) : undefined,
+        categoryId: categoryVal ? [Number(categoryVal)] : undefined,
+        startDate: startVal || undefined,
         dueDate: dueVal || undefined,
         attachmentId: attachmentIds.length ? attachmentIds : undefined,
         notifiedUserId: notifiedUserIds.length ? notifiedUserIds : undefined
@@ -130,6 +139,7 @@ document.getElementById("submit")?.addEventListener("click", async () => {
     document.getElementById("title").value = "";
     document.getElementById("description").value = "";
     $("#project").val(null).trigger("change");
+    document.getElementById("startDate").value = "";
     document.getElementById("due").value = "";
     attachedFiles = [];
     renderFileList();
@@ -154,6 +164,7 @@ document.getElementById("clear")?.addEventListener("click", () => {
   document.getElementById("title").value = "";
   document.getElementById("description").value = "";
   $("#project").val(null).trigger("change");
+  document.getElementById("startDate").value = "";
   document.getElementById("due").value = "";
   attachedFiles = [];
   renderFileList();

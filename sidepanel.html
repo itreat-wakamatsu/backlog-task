@@ -153,7 +153,7 @@
       }
       .row {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
         gap: 8px;
       }
       .hint {
@@ -164,7 +164,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-top: 6px;
+        margin-top: 4px;
         cursor: pointer;
       }
       .useProjectForPageRow input[type="checkbox"] {
@@ -1506,14 +1506,17 @@
         <div class="settingsGroup">
           <h2 class="settingsGroupTitle">AI自動入力</h2>
           <p class="hint muted" style="margin: 0 0 8px">
-            選択テキストとページのURL・タイトルから、課題の件名・詳細・担当者・期日を自動入力します。OpenAI と Gemini の API キーはそれぞれ別に保存・管理されます。
+            選択テキストとページのURL・タイトルから、課題の件名・詳細・担当者・カテゴリ・開始日・期日を自動入力します。OpenAI と Gemini の API キーはそれぞれ別に保存・管理されます。
           </p>
           <div class="settingsSection">
             <label class="settingsRow">
               <input type="checkbox" id="aiEnabled" />
-              AI自動入力を有効にする
+              AI自動入力を有効にする（開いたときに自動実行）
             </label>
-            <label class="settingsRow" style="margin-top: 6px">
+            <p id="aiEnabledNoKeyHint" class="hint" style="margin: 4px 0 0; color: var(--ui-text-soft)" hidden>
+              有効にするには先にAPIキーを設定してください
+            </p>
+            <label class="settingsRow" style="margin-top: 8px">
               <input type="checkbox" id="aiSuggestProjectAssignee" />
               プロジェクトと担当者を推測する
             </label>
@@ -1603,25 +1606,36 @@
           </button>
         </div>
 
-        <label class="fieldLegend">プロジェクト</label>
+        <div>
+          <label class="fieldLegend">プロジェクト</label>
+          <select
+            id="project"
+            style="width: 100%"
+            tabindex="1"
+          >
+            <option></option>
+          </select>
+          <label class="useProjectForPageRow">
+            <input type="checkbox" id="useProjectForThisPage" />
+            <span>このページでは常にこのプロジェクトを使用する</span>
+          </label>
+        </div>
+
+        <label class="fieldLegend">種別</label>
         <select
-          id="project"
+          id="issueType"
           style="width: 100%"
-          tabindex="1"
+          tabindex="2"
         >
-          <option></option>
+          <option>プロジェクトを選択してください</option>
         </select>
-        <label class="useProjectForPageRow">
-          <input type="checkbox" id="useProjectForThisPage" />
-          <span>このページでは常にこのプロジェクトを使用する</span>
-        </label>
 
         <label>
           <span class="fieldLegend">件名</span>
           <input
             id="title"
             placeholder="件名"
-            tabindex="2"
+            tabindex="3"
           />
         </label>
 
@@ -1634,7 +1648,7 @@
                 id="description"
                 class="editorTextarea"
                 placeholder="課題の詳細（@を入力してメンバーに通知）"
-                tabindex="3"
+                tabindex="4"
               ></textarea>
               <div
                 id="preview"
@@ -1869,18 +1883,40 @@
         >
           <option>プロジェクトを選択してください</option>
         </select>
+
+        <label class="fieldLegend" style="margin-top: 4px">カテゴリ</label>
+        <select
+          id="category"
+          style="width: 100%"
+          tabindex="5"
+        >
+          <option>プロジェクトを選択してください</option>
+        </select>
+
         <div class="row">
+          <label>
+            開始日
+            <input
+              id="startDate"
+              type="date"
+              tabindex="6"
+            />
+          </label>
           <label>
             期日
             <input
               id="due"
               type="date"
-              tabindex="5"
+              tabindex="7"
             />
           </label>
         </div>
 
         <div class="divider"></div>
+
+        <div class="hint" id="googleDocsHint" hidden>
+          💡 Googleドキュメントでは、テキストを選択して <strong>Ctrl+C</strong>（Mac: Cmd+C）でコピーしてから拡張機能を開くと、詳細欄に自動で貼り付けられます。
+        </div>
 
         <div class="hint" id="aiHint">
           設定で「AI自動入力を有効にする」とAPIキーを保存すると、課題の件名・詳細・担当者・期日を自動入力できます。
@@ -1896,7 +1932,7 @@
           <button
             id="submit"
             class="primary btnSubmit"
-            tabindex="6"
+            tabindex="8"
           >
             送信
           </button>

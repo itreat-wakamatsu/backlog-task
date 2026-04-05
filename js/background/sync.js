@@ -29,11 +29,12 @@ export async function syncBacklogData(reason) {
 
   const entries = await mapWithConcurrency(projects, MAX_CONCURRENCY, async (p) => {
     const projectIdOrKey = p.id;
-    const [users, issueTypes] = await Promise.all([
+    const [users, issueTypes, categories] = await Promise.all([
       apiGet(apiBase, apiKey.trim(), `/projects/${encodeURIComponent(projectIdOrKey)}/users`, {}),
-      apiGet(apiBase, apiKey.trim(), `/projects/${encodeURIComponent(projectIdOrKey)}/issueTypes`, {})
+      apiGet(apiBase, apiKey.trim(), `/projects/${encodeURIComponent(projectIdOrKey)}/issueTypes`, {}),
+      apiGet(apiBase, apiKey.trim(), `/projects/${encodeURIComponent(projectIdOrKey)}/categories`, {}).catch(() => [])
     ]);
-    return [String(p.id), { users, issueTypes }];
+    return [String(p.id), { users, issueTypes, categories }];
   });
 
   const projectUsersByProjectId = Object.fromEntries(
@@ -41,6 +42,9 @@ export async function syncBacklogData(reason) {
   );
   const projectIssueTypesByProjectId = Object.fromEntries(
     entries.map(([pid, { issueTypes }]) => [pid, issueTypes ?? []])
+  );
+  const projectCategoriesByProjectId = Object.fromEntries(
+    entries.map(([pid, { categories }]) => [pid, categories ?? []])
   );
 
   const priorities = await apiGet(apiBase, apiKey.trim(), "/priorities", {});
@@ -71,6 +75,12 @@ export async function syncBacklogData(reason) {
       Object.entries(projectIssueTypesByProjectId).map(([pid, types]) => [
         pid,
         (types ?? []).map(t => ({ id: t.id, name: t.name }))
+      ])
+    ),
+    projectCategoriesByProjectId: Object.fromEntries(
+      Object.entries(projectCategoriesByProjectId).map(([pid, cats]) => [
+        pid,
+        (cats ?? []).map(c => ({ id: c.id, name: c.name }))
       ])
     ),
     priorities: (priorities ?? []).map(p => ({ id: p.id, name: p.name }))

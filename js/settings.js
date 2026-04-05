@@ -64,6 +64,19 @@ function getAiApiKeyForProvider(settings, provider) {
   return (settings.openaiApiKey || settings.aiApiKey || "").trim();
 }
 
+/** APIキーの有無に応じて aiEnabled チェックボックスの有効/無効を切り替える */
+function updateAiEnabledState(hasKey) {
+  const cb = document.getElementById("aiEnabled");
+  const hint = document.getElementById("aiEnabledNoKeyHint");
+  if (!cb) return;
+  cb.disabled = !hasKey;
+  if (hint) hint.hidden = hasKey;
+  // APIキーがない状態でチェックが入っていれば外す
+  if (!hasKey && cb.checked) {
+    cb.checked = false;
+  }
+}
+
 function updateAiApiKeyPlaceholder(provider, hasKey) {
   const input = document.getElementById("aiApiKeyInput");
   if (!input) return;
@@ -88,14 +101,17 @@ async function loadSettingsUI() {
   document.getElementById("aiEnabled").checked = settings.aiEnabled;
   document.getElementById("aiSuggestProjectAssignee").checked = settings.aiSuggestProjectAssignee !== false;
   const provider = settings.aiProvider || "openai";
+  // APIキー設定前は後で更新するので一旦ここは provider の後に処理
   const providerEl = document.getElementById("aiProviderSelect");
   if (providerEl) providerEl.value = provider;
   setAiModelOptions(provider);
   const aiModelEl = document.getElementById("aiModelSelect");
   if (aiModelEl) aiModelEl.value = settings.aiModel || (provider === "gemini" ? "gemini-2.5-flash-lite" : "gpt-4o-mini");
   document.getElementById("aiApiKeyInput").value = "";
-  updateAiApiKeyPlaceholder(provider, !!getAiApiKeyForProvider(settings, provider));
+  const hasAiKey = !!getAiApiKeyForProvider(settings, provider);
+  updateAiApiKeyPlaceholder(provider, hasAiKey);
   updateAiApiKeyLabel(provider);
+  updateAiEnabledState(hasAiKey);
   const hintEl = document.getElementById("aiApiKeyHint");
   if (hintEl) hintEl.textContent = provider === "gemini" ? "Google AI Studio で取得した API キーを設定します。キーは拡張機能内にのみ保存され、Google の API に送信されます。" : "OpenAI の API キーを設定すると、課題の内容を自動推測できます。キーは拡張機能内にのみ保存され、OpenAI の API に送信されます。";
 
@@ -238,8 +254,10 @@ document.getElementById("aiProviderSelect")?.addEventListener("change", async (e
   const modelEl = document.getElementById("aiModelSelect");
   if (modelEl) modelEl.value = defaultModel;
   const settings = await getSettings();
-  updateAiApiKeyPlaceholder(provider, !!getAiApiKeyForProvider(settings, provider));
+  const hasProviderKey = !!getAiApiKeyForProvider(settings, provider);
+  updateAiApiKeyPlaceholder(provider, hasProviderKey);
   updateAiApiKeyLabel(provider);
+  updateAiEnabledState(hasProviderKey);
   const hintEl = document.getElementById("aiApiKeyHint");
   if (hintEl) hintEl.textContent = provider === "gemini" ? "Google AI Studio で取得した API キーを設定します。キーは拡張機能内にのみ保存され、Google の API に送信されます。" : "OpenAI の API キーを設定すると、課題の内容を自動推測できます。キーは拡張機能内にのみ保存され、OpenAI の API に送信されます。";
   await saveSettings({
@@ -276,5 +294,7 @@ async function saveAiSettings() {
   }
   await saveSettings(next);
   inputEl.value = "";
-  updateAiApiKeyPlaceholder(next.aiProvider, !!getAiApiKeyForProvider(next, next.aiProvider));
+  const hasKeyAfter = !!getAiApiKeyForProvider(next, next.aiProvider);
+  updateAiApiKeyPlaceholder(next.aiProvider, hasKeyAfter);
+  updateAiEnabledState(hasKeyAfter);
 }

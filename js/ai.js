@@ -12,45 +12,69 @@ async function getDraft() {
 }
 
 /**
- * @param {Object} draft - { selectedText, pageUrl, pageTitle }
+ * @param {Object} draft - { selectedText, pageUrl, pageTitle, documentBeginning, surroundingBefore, surroundingAfter }
  * @param {Array} projectList - [{ id, projectKey, name }]
  * @param {Object} assigneesByProjectId - { [projectId]: [{ id, name }] }
+ * @param {Object} categoriesByProjectId - { [projectId]: [{ id, name }] }
+ * @param {Object} issueTypesByProjectId - { [projectId]: [{ id, name }] }
  * @param {boolean} inferProjectAssignee - プロジェクト・担当者を推測するか
  * @param {string} [fixedProjectId] - このページでプロジェクト固定時はその projectId（担当者のみ推測）
  */
-function buildPrompt(draft, projectList, assigneesByProjectId, inferProjectAssignee, fixedProjectId) {
+function buildPrompt(draft, projectList, assigneesByProjectId, categoriesByProjectId, issueTypesByProjectId, inferProjectAssignee, fixedProjectId) {
   const assigneeOnly = !!fixedProjectId;
   const includeProjectAssignee = assigneeOnly || (inferProjectAssignee && projectList?.length > 0);
 
   // 実行時点の現在日時（ユーザー環境の「今日」）をプロンプトに含める
   const now = new Date();
-  const nowIso = now.toISOString(); // 例: 2026-02-24T10:23:45.123Z
-  const today = nowIso.slice(0, 10); // 例: 2026-02-24
+  const nowIso = now.toISOString();
+  const today = nowIso.slice(0, 10);
+
+  // 共通の重要指示（選択テキストを課題本文として扱うことを徹底させる）
+  const coreInstruction = `
+【最重要ルール】
+- 「選択テキスト」はユーザーがBacklog課題として起票したいコンテンツです
+- description: 選択テキストに含まれる項目・内容をすべてMarkdownで整形してください。冗長な表現や重複は整理して構いませんが、テキストに含まれる修正依頼・タスク・事項を一つも欠落させないでください
+- summary: 選択テキストの内容を端的に表す短いタイトルを付けてください
+- それ以外の項目（プロジェクト・担当者・種別・カテゴリ・期日等）は補足情報から推測してください。推測できない項目は空文字にしてください`;
 
   const baseSystem = assigneeOnly
-    ? `あなたはBacklogの課題作成を助けるアシスタントです。
-以下のウェブページの情報と、指定プロジェクトの担当者一覧をもとに、課題の件名・詳細・担当者・期日を推測し、指定のJSON形式のみで答えてください。
-プロジェクトは固定のため推測しません。projectKey は必ず空文字 "" にしてください。担当者のみ推測してください。
-推測できない項目は空文字にしてください。期日は YYYY-MM-DD 形式のみ使用してください。`
+    ? `あなたはBacklogの課題作成を助けるアシスタントです。${coreInstruction}
+
+プロジェクトは固定のため推測しません。projectKey は必ず空文字 "" にしてください。
+担当者・種別・カテゴリは提供される一覧から推測してください。期日・開始日は YYYY-MM-DD 形式のみ使用してください。`
     : includeProjectAssignee
-      ? `あなたはBacklogの課題作成を助けるアシスタントです。
-以下のウェブページの情報と、Backlogのプロジェクト・担当者一覧をもとに、課題の件名・詳細・プロジェクト・担当者・期日を推測し、指定のJSON形式のみで答えてください。
-推測できない項目は空文字にしてください。
-プロジェクトと担当者の両方を推測できる場合は両方含めてください。プロジェクトのみ推測できる場合も、projectKey のみ含めて構いません。
-期日は YYYY-MM-DD 形式のみ使用してください。`
-      : `あなたはBacklogの課題作成を助けるアシスタントです。
-以下のウェブページの情報をもとに、課題の件名・詳細・期日を推測し、指定のJSON形式のみで答えてください。
-プロジェクトと担当者は推測しないでください。projectKey と assigneeName は必ず空文字 "" にしてください。
-推測できない項目は空文字にしてください。期日は YYYY-MM-DD 形式のみ使用してください。`;
+      ? `あなたはBacklogの課題作成を助けるアシスタントです。${coreInstruction}
+
+projectKey・assigneeName・issueTypeName・categoryName・startDate・dueDate は補足情報（ページタイトル・URL・ドキュメント先頭・前後テキスト・各一覧）から推測してください。
+プロジェクトと担当者の両方を推測できる場合は両方含めてください。期日・開始日は YYYY-MM-DD 形式のみ使用してください。`
+      : `あなたはBacklogの課題作成を助けるアシスタントです。${coreInstruction}
+
+projectKey・assigneeName は必ず空文字 "" にしてください。startDate・dueDate のみ推測してください。期日・開始日は YYYY-MM-DD 形式のみ使用してください。`;
 
   const system = `${baseSystem}
 
 現在日時は ${today} (${nowIso}) です。この日付を「今日」として扱ってください。`;
 
-  let user = `ページタイトル: ${draft.pageTitle || "(なし)"}
-URL: ${draft.pageUrl || "(なし)"}
-選択テキスト:
-${draft.selectedText || "(なし)"}`;
+  // 選択テキストを最上部に配置（課題の主要コンテンツとして強調）
+  let user = `【選択テキスト（Backlog課題として起票するメインコンテンツ。含まれる全ての項目・内容をdescriptionに含めてください）】
+${draft.selectedText || "(なし)"}
+
+--- 補足情報（プロジェクト・担当者・種別・カテゴリ・期日等の推測に使用） ---
+ページタイトル: ${draft.pageTitle || "(なし)"}
+URL: ${draft.pageUrl || "(なし)"}`;
+
+  // ドキュメント先頭（プロジェクト・担当者推測の手がかりになる議事録タイトル・参加者情報等を含む）
+  if (draft.documentBeginning?.trim()) {
+    user += `\n\n【ドキュメント先頭（最初の約1500文字）】\n${draft.documentBeginning.trim()}`;
+  }
+
+  // 選択箇所の前後テキスト（文脈把握に活用）
+  if (draft.surroundingBefore?.trim() || draft.surroundingAfter?.trim()) {
+    user += `\n\n【選択箇所の前後テキスト（文脈把握用）】`;
+    if (draft.surroundingBefore?.trim()) user += `\n---前---\n${draft.surroundingBefore.trim()}`;
+    user += `\n---選択テキスト（上記参照）---`;
+    if (draft.surroundingAfter?.trim()) user += `\n---後---\n${draft.surroundingAfter.trim()}`;
+  }
 
   if (assigneeOnly) {
     const users = assigneesByProjectId?.[String(fixedProjectId)] ?? [];
@@ -69,10 +93,52 @@ ${draft.selectedText || "(なし)"}`;
     }
   }
 
+  // 種別一覧をプロンプトに追加（プロジェクトごとに異なるため別途渡す）
+  if (assigneeOnly && fixedProjectId) {
+    const types = issueTypesByProjectId?.[String(fixedProjectId)] ?? [];
+    if (types.length) {
+      user += `\n\n【このプロジェクトの種別一覧（issueTypeName はこの一覧から選択してください）】\n${types.map((t) => t.name).join(", ")}`;
+    }
+  } else if (includeProjectAssignee) {
+    let hasTypes = false;
+    let typeLines = "";
+    for (const p of projectList) {
+      const types = issueTypesByProjectId?.[String(p.id)] ?? [];
+      if (types.length) {
+        hasTypes = true;
+        typeLines += `\nプロジェクト ${p.projectKey}: ${types.map((t) => t.name).join(", ")}`;
+      }
+    }
+    if (hasTypes) {
+      user += `\n\n【各プロジェクトの種別一覧（issueTypeName はこの一覧から選択してください）】${typeLines}`;
+    }
+  }
+
+  // カテゴリ一覧をプロンプトに追加
+  if (assigneeOnly && fixedProjectId) {
+    const cats = categoriesByProjectId?.[String(fixedProjectId)] ?? [];
+    if (cats.length) {
+      user += `\n\n【このプロジェクトのカテゴリ一覧（categoryName はこの一覧から選択してください）】\n${cats.map((c) => c.name).join(", ")}`;
+    }
+  } else if (includeProjectAssignee) {
+    let hasCats = false;
+    let catLines = "";
+    for (const p of projectList) {
+      const cats = categoriesByProjectId?.[String(p.id)] ?? [];
+      if (cats.length) {
+        hasCats = true;
+        catLines += `\nプロジェクト ${p.projectKey}: ${cats.map((c) => c.name).join(", ")}`;
+      }
+    }
+    if (hasCats) {
+      user += `\n\n【各プロジェクトのカテゴリ一覧（categoryName はこの一覧から選択してください）】${catLines}`;
+    }
+  }
+
   user += `
 
 上記をもとに、次のJSON形式のみで答えてください。他の説明は不要です。配列にはせず、単一のJSONで答えてください。
-{"summary":"件名（短いタイトル）","description":"課題の詳細（Markdown可）","projectKey":"プロジェクトのprojectKeyまたは空","assigneeName":"担当者名または空","dueDate":"YYYY-MM-DDまたは空"}`;
+{"summary":"件名（短いタイトル）","description":"課題の詳細（Markdown形式。選択テキストの全項目を含めること。表現は整理可）","projectKey":"プロジェクトのprojectKeyまたは空","assigneeName":"担当者名または空","issueTypeName":"種別名または空","categoryName":"カテゴリ名または空","startDate":"YYYY-MM-DDまたは空","dueDate":"YYYY-MM-DDまたは空"}`;
 
   return { system, user };
 }
@@ -135,6 +201,8 @@ async function applyToForm(result, applyProjectAssignee, pageUrl = "", fixedProj
       $("#project").val(projectId).trigger("change");
       BQA.currentProjectId = projectId;
       if (typeof buildAssigneeSelect === "function") await buildAssigneeSelect(projectId);
+      if (typeof buildIssueTypeSelect === "function") buildIssueTypeSelect(projectId);
+      if (typeof buildCategorySelect === "function") buildCategorySelect(projectId);
       if (typeof saveRecentProject === "function") await saveRecentProject(projectId);
       if (typeof buildMentionUsersForProject === "function") buildMentionUsersForProject(projectId);
     }
@@ -149,6 +217,26 @@ async function applyToForm(result, applyProjectAssignee, pageUrl = "", fixedProj
     }
   }
 
+  // 種別の適用
+  if (result.issueTypeName != null && String(result.issueTypeName).trim() && projectId) {
+    const types = BQA.cache?.projectIssueTypesByProjectId?.[String(projectId)] ?? [];
+    const typeName = String(result.issueTypeName).trim();
+    const type = types.find((t) => t.name === typeName);
+    if (type && $("#issueType").data("select2")) {
+      $("#issueType").val(String(type.id)).trigger("change");
+    }
+  }
+
+  // カテゴリの適用
+  if (result.categoryName != null && String(result.categoryName).trim() && projectId) {
+    const categories = BQA.cache?.projectCategoriesByProjectId?.[String(projectId)] ?? [];
+    const catName = String(result.categoryName).trim();
+    const cat = categories.find((c) => c.name === catName);
+    if (cat && $("#category").data("select2")) {
+      $("#category").val(String(cat.id)).trigger("change");
+    }
+  }
+
   if (result.description != null && descEl) {
     let desc = String(result.description).trim();
     desc += "\n\n※ AIによる自動生成\n作成したページ：" + (pageUrl?.trim() || "(なし)");
@@ -156,6 +244,11 @@ async function applyToForm(result, applyProjectAssignee, pageUrl = "", fixedProj
     if (typeof renderPreview === "function") renderPreview();
   }
   if (result.summary != null && titleEl) titleEl.value = String(result.summary).trim();
+
+  // 開始日の適用
+  const startEl = document.getElementById("startDate");
+  if (result.startDate != null && startEl && isValidDateString(result.startDate)) startEl.value = String(result.startDate).trim();
+
   if (result.dueDate != null && dueEl && isValidDateString(result.dueDate)) dueEl.value = String(result.dueDate).trim();
 }
 
@@ -319,13 +412,15 @@ async function _runAiSuggestCore() {
     name: p.name
   }));
   const assigneesByProjectId = BQA.cache?.projectUsersByProjectId ?? {};
+  const categoriesByProjectId = BQA.cache?.projectCategoriesByProjectId ?? {};
+  const issueTypesByProjectId = BQA.cache?.projectIssueTypesByProjectId ?? {};
   const inferProjectAssignee = settings.aiSuggestProjectAssignee !== false;
 
   updateAiStatus("AI自動入力: 実行中…");
   const startMs = performance.now();
 
   try {
-    const { system, user } = buildPrompt(draft, projectList, assigneesByProjectId, inferProjectAssignee, fixedProjectId);
+    const { system, user } = buildPrompt(draft, projectList, assigneesByProjectId, categoriesByProjectId, issueTypesByProjectId, inferProjectAssignee, fixedProjectId);
     const messages = [
       { role: "system", content: system },
       { role: "user", content: user }
@@ -400,20 +495,39 @@ function toUserFriendlyAiError(rawMessage) {
 }
 
 /**
- * 設定に応じて #aiStatus と #aiHint の初期表示を更新する。フォーム表示時に呼ぶ。
+ * 設定に応じて #aiStatus と #aiHint、#aiSuggestBtn の表示を更新する。フォーム表示時に呼ぶ。
  */
 async function updateAiStatusFromSettings() {
   const statusEl = document.getElementById("aiStatus");
   const hintEl = document.getElementById("aiHint");
+  const btnEl = document.getElementById("aiSuggestBtn");
   if (!statusEl && !hintEl) return;
   const settings = await getSettings();
-  if (!settings.aiEnabled || !getAiApiKey(settings)) {
-    if (statusEl) statusEl.textContent = "AI自動入力: オフ";
-    if (hintEl) hintEl.textContent = "設定で「AI自動入力を有効にする」とAPIキーを保存すると、課題の件名・詳細・担当者・期日を自動入力できます。";
-    return;
+  const hasKey = !!getAiApiKey(settings);
+  const isReady = settings.aiEnabled && hasKey;
+
+  if (!isReady) {
+    if (statusEl) {
+      statusEl.textContent = settings.aiEnabled && !hasKey ? "AI自動入力: APIキー未設定" : "AI自動入力: オフ";
+    }
+    if (hintEl) hintEl.textContent = "設定で「AI自動入力を有効にする」とAPIキーを保存すると、課題の件名・詳細・担当者・カテゴリ・期日等を自動入力できます。";
+  } else {
+    if (statusEl) statusEl.textContent = "AI自動入力: 利用可能";
+    if (hintEl) hintEl.textContent = "選択テキストとページ情報から課題を自動入力します。「AIで自動入力」ボタンで再実行できます。";
   }
-  if (statusEl) statusEl.textContent = "AI自動入力: 利用可能";
-  if (hintEl) hintEl.textContent = "選択テキストとページ情報から課題を自動入力します。「AIで自動入力」ボタンで再実行できます。";
+
+  // ボタンは常に表示するが、未設定時はスタイルで区別（クリック時にメッセージ表示）
+  if (btnEl) btnEl.dataset.aiReady = isReady ? "1" : "0";
 }
 
-document.getElementById("aiSuggestBtn")?.addEventListener("click", () => runAiSuggest());
+document.getElementById("aiSuggestBtn")?.addEventListener("click", async () => {
+  const settings = await getSettings();
+  if (!settings.aiEnabled || !getAiApiKey(settings)) {
+    const msg = !getAiApiKey(settings)
+      ? "AI自動入力を使用するには、設定でAPIキーを入力してください。"
+      : "AI自動入力が無効です。設定で「AI自動入力を有効にする」をオンにしてください。";
+    if (typeof setTopNotification === "function") setTopNotification(msg, true);
+    return;
+  }
+  runAiSuggest();
+});
