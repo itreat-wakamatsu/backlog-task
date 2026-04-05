@@ -32,8 +32,8 @@ function buildPrompt(draft, projectList, assigneesByProjectId, categoriesByProje
   // 共通の重要指示（選択テキストを課題本文として扱うことを徹底させる）
   const coreInstruction = `
 【最重要ルール】
-- 「選択テキスト」はユーザーがBacklog課題として起票したいコンテンツそのものです
-- description: 選択テキストの内容をそのままMarkdownで整形してください。長くても省略・要約・カットは禁止。複数の依頼・項目が含まれる場合は全て漏らさず記載してください
+- 「選択テキスト」はユーザーがBacklog課題として起票したいコンテンツです
+- description: 選択テキストに含まれる項目・内容をすべてMarkdownで整形してください。冗長な表現や重複は整理して構いませんが、テキストに含まれる修正依頼・タスク・事項を一つも欠落させないでください
 - summary: 選択テキストの内容を端的に表す短いタイトルを付けてください
 - それ以外の項目（プロジェクト・担当者・種別・カテゴリ・期日等）は補足情報から推測してください。推測できない項目は空文字にしてください`;
 
@@ -56,7 +56,7 @@ projectKey・assigneeName は必ず空文字 "" にしてください。startDat
 現在日時は ${today} (${nowIso}) です。この日付を「今日」として扱ってください。`;
 
   // 選択テキストを最上部に配置（課題の主要コンテンツとして強調）
-  let user = `【選択テキスト（Backlog課題として起票するメインコンテンツ。全文をそのままdescriptionに含めてください）】
+  let user = `【選択テキスト（Backlog課題として起票するメインコンテンツ。含まれる全ての項目・内容をdescriptionに含めてください）】
 ${draft.selectedText || "(なし)"}
 
 --- 補足情報（プロジェクト・担当者・種別・カテゴリ・期日等の推測に使用） ---
@@ -138,7 +138,7 @@ URL: ${draft.pageUrl || "(なし)"}`;
   user += `
 
 上記をもとに、次のJSON形式のみで答えてください。他の説明は不要です。配列にはせず、単一のJSONで答えてください。
-{"summary":"件名（短いタイトル）","description":"課題の詳細（選択テキストの全文をMarkdownで整形。省略禁止）","projectKey":"プロジェクトのprojectKeyまたは空","assigneeName":"担当者名または空","issueTypeName":"種別名または空","categoryName":"カテゴリ名または空","startDate":"YYYY-MM-DDまたは空","dueDate":"YYYY-MM-DDまたは空"}`;
+{"summary":"件名（短いタイトル）","description":"課題の詳細（Markdown形式。選択テキストの全項目を含めること。表現は整理可）","projectKey":"プロジェクトのprojectKeyまたは空","assigneeName":"担当者名または空","issueTypeName":"種別名または空","categoryName":"カテゴリ名または空","startDate":"YYYY-MM-DDまたは空","dueDate":"YYYY-MM-DDまたは空"}`;
 
   return { system, user };
 }
