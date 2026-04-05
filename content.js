@@ -16,9 +16,14 @@ function isGoogleDocsContext() {
 
 // Google Docs でユーザーがコピー操作をした際にクリップボードをキャッシュ
 // copy イベントは Ctrl+C・右クリック Copy・メニューの「コピー」すべてで発火する
-document.addEventListener("copy", () => {
+document.addEventListener("copy", (e) => {
   if (!isGoogleDocsContext()) return;
-  // copy イベント直後はクリップボードが更新中のことがあるため少し待つ
+  // clipboardData から直接取得を試みる（copy イベント内は同期的にアクセス可能）
+  try {
+    const data = e.clipboardData?.getData("text/plain");
+    if (data) { _googleDocsLastCopied = data; return; }
+  } catch (_) {}
+  // フォールバック: 非同期でクリップボードを読み取る
   setTimeout(async () => {
     try {
       const t = await navigator.clipboard.readText();
@@ -26,15 +31,23 @@ document.addEventListener("copy", () => {
     } catch (_) {
       // clipboardRead 権限がない環境では無視
     }
-  }, 80);
+  }, 50);
 });
 
 // Google Docs で右クリック（コンテキストメニュー）が発生したとき、
-// ユーザーの操作を起点として execCommand("copy") を呼ぶことで
-// isTrusted=true の copy イベントが発火し、選択テキストがクリップボードに入る。
-// これにより手動 Ctrl+C なしでも選択テキストを取得できる。
+// エディタ iframe と main document の両方で execCommand("copy") を試みる。
+// Google Docs のキャンバスベース選択は標準 DOM 選択と異なるため、
+// iframe 経由でコピーが成功する場合がある。
+// ※ contextmenu は信頼されたユーザー操作なので execCommand が許可される。
 document.addEventListener("contextmenu", () => {
   if (!isGoogleDocsContext()) return;
+  try {
+    // エディタ入力イベントを捕捉する iframe で試みる
+    const iframe = document.querySelector(".docs-texteventtarget-iframe");
+    if (iframe?.contentDocument) {
+      iframe.contentDocument.execCommand("copy");
+    }
+  } catch (_) {}
   try { document.execCommand("copy"); } catch (_) {}
 });
 

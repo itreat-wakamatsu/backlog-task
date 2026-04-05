@@ -40,7 +40,11 @@
     document.body.classList.add("popup-mode");
   }
 
-  if (fromActionUrl || isPopup) {
+  // DRAFT_OPENED_FROM_ACTION は「アクションボタンで開いた」ときのみ送信する。
+  // isPopup（ポップアップ設定 or 幅が狭い）でも送信していたが、コンテキストメニューや
+  // キーボードショートカットで開いた場合に openedFrom が "action" に上書きされ
+  // AI 自動実行がブロックされるバグがあったため、fromActionUrl のみに限定する。
+  if (fromActionUrl) {
     chrome.runtime.sendMessage({ type: "DRAFT_OPENED_FROM_ACTION" }).catch(() => {});
   }
 
@@ -79,7 +83,9 @@ async function init() {
     const draft = obj[DRAFT_STORAGE_KEY];
     const isRecent = draft?.createdAt && (Date.now() - draft.createdAt < 30000);
     if (draft?.openedFrom === "contextMenu" && isRecent) {
-      // URL プロジェクト適用（initMainForm 時点では古いドラフトを読んでいた可能性があるため再適用）
+      // フォームにドラフトを反映（initMainForm 時点では getSelectionFromTab が未完了だった可能性があるため再適用）
+      if (typeof applyDraftToForm === "function") await applyDraftToForm();
+      // URL プロジェクト適用
       if (typeof applyUrlProjectFromDraft === "function") await applyUrlProjectFromDraft();
       if (typeof updateUseProjectCheckboxState === "function") await updateUseProjectCheckboxState();
       maybeRunAiSuggestForContextMenu();
