@@ -8,10 +8,14 @@
 let _googleDocsLastCopied = "";
 
 function isGoogleDocsContext() {
-  return (
-    location.hostname === "docs.google.com" ||
-    !!document.querySelector(".docs-texteventtarget-iframe")
-  );
+  // docs.google.com のホスト名だけで判定するとスプレッドシート(/spreadsheets/)や
+  // スライド(/presentation/)、フォーム(/forms/)も一致してしまうため、
+  // Google ドキュメント固有のパス(/document/)のみに限定する。
+  if (location.hostname === "docs.google.com") {
+    return location.pathname.startsWith("/document/");
+  }
+  // 別ホストでも Google Docs 固有の iframe が存在する場合はドキュメントとみなす
+  return !!document.querySelector(".docs-texteventtarget-iframe");
 }
 
 // Google Docs でユーザーがコピー操作をした際にクリップボードをキャッシュ
