@@ -1560,6 +1560,23 @@
               </select>
             </label>
           </div>
+          <div class="settingsSection">
+            <h3>カスタム指示</h3>
+            <p class="hint muted" style="margin: 0 0 8px">
+              AIの自動入力に追加のルールや指示を記入できます。プロジェクトの振り分けルール、件名のフォーマット、カテゴリの選択条件など、チームや業務に合わせた指示を自由に記述してください。
+            </p>
+            <textarea
+              id="aiCustomPrompt"
+              rows="5"
+              style="width: 100%; box-sizing: border-box; resize: vertical; font-size: 12px"
+              placeholder="例）
+・「Googirl」が含まれる依頼は「IT_INF」プロジェクトを選択する
+・件名の冒頭に【依頼元会社名】を付ける（例：【Googirl】○○の修正対応）
+・「Googirlスプレッドシート」の修正依頼はカテゴリ「Googirl」を選択する
+・担当者が不明な場合は「山田 太郎」を設定する
+・期日が明記されていなければ2週間後を設定する"
+            ></textarea>
+          </div>
         </div>
 
         <div class="settingsGroup">

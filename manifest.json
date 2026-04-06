@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Backlog Quick Add",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "選択テキストやページ情報からBacklogへ課題を作成。サイドパネルで入力し、任意でOpenAIまたはGeminiでフィールドを自動補完できます。",
   "minimum_chrome_version": "116",
   "permissions": [
