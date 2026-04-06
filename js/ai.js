@@ -20,7 +20,7 @@ async function getDraft() {
  * @param {boolean} inferProjectAssignee - プロジェクト・担当者を推測するか
  * @param {string} [fixedProjectId] - このページでプロジェクト固定時はその projectId（担当者のみ推測）
  */
-function buildPrompt(draft, projectList, assigneesByProjectId, categoriesByProjectId, issueTypesByProjectId, inferProjectAssignee, fixedProjectId) {
+function buildPrompt(draft, projectList, assigneesByProjectId, categoriesByProjectId, issueTypesByProjectId, inferProjectAssignee, fixedProjectId, customPrompt) {
   const assigneeOnly = !!fixedProjectId;
   const includeProjectAssignee = assigneeOnly || (inferProjectAssignee && projectList?.length > 0);
 
@@ -53,7 +53,7 @@ projectKey・assigneeName は必ず空文字 "" にしてください。startDat
 
   const system = `${baseSystem}
 
-現在日時は ${today} (${nowIso}) です。この日付を「今日」として扱ってください。`;
+現在日時は ${today} (${nowIso}) です。この日付を「今日」として扱ってください。${customPrompt?.trim() ? `\n\n【ユーザーからの追加指示（最優先で従ってください）】\n${customPrompt.trim()}` : ""}`;
 
   // 選択テキストを最上部に配置（課題の主要コンテンツとして強調）
   let user = `【選択テキスト（Backlog課題として起票するメインコンテンツ。含まれる全ての項目・内容をdescriptionに含めてください）】
@@ -415,12 +415,13 @@ async function _runAiSuggestCore() {
   const categoriesByProjectId = BQA.cache?.projectCategoriesByProjectId ?? {};
   const issueTypesByProjectId = BQA.cache?.projectIssueTypesByProjectId ?? {};
   const inferProjectAssignee = settings.aiSuggestProjectAssignee !== false;
+  const customPrompt = settings.aiCustomPrompt ?? "";
 
   updateAiStatus("AI自動入力: 実行中…");
   const startMs = performance.now();
 
   try {
-    const { system, user } = buildPrompt(draft, projectList, assigneesByProjectId, categoriesByProjectId, issueTypesByProjectId, inferProjectAssignee, fixedProjectId);
+    const { system, user } = buildPrompt(draft, projectList, assigneesByProjectId, categoriesByProjectId, issueTypesByProjectId, inferProjectAssignee, fixedProjectId, customPrompt);
     const messages = [
       { role: "system", content: system },
       { role: "user", content: user }

@@ -100,6 +100,8 @@ async function loadSettingsUI() {
 
   document.getElementById("aiEnabled").checked = settings.aiEnabled;
   document.getElementById("aiSuggestProjectAssignee").checked = settings.aiSuggestProjectAssignee !== false;
+  const customPromptEl = document.getElementById("aiCustomPrompt");
+  if (customPromptEl) customPromptEl.value = settings.aiCustomPrompt ?? "";
   const provider = settings.aiProvider || "openai";
   // APIキー設定前は後で更新するので一旦ここは provider の後に処理
   const providerEl = document.getElementById("aiProviderSelect");
@@ -271,6 +273,10 @@ document.getElementById("aiModelSelect")?.addEventListener("change", async (e) =
   await saveSettings({ ...(await getSettings()), aiModel: e.target.value || "gpt-4o-mini" });
 });
 
+document.getElementById("aiCustomPrompt")?.addEventListener("change", async (e) => {
+  await saveSettings({ ...(await getSettings()), aiCustomPrompt: e.target.value });
+});
+
 document.getElementById("aiApiKeySave")?.addEventListener("click", saveAiSettings);
 
 async function saveAiSettings() {
@@ -286,7 +292,8 @@ async function saveAiSettings() {
     aiEnabled: document.getElementById("aiEnabled")?.checked ?? settings.aiEnabled,
     aiSuggestProjectAssignee: document.getElementById("aiSuggestProjectAssignee")?.checked !== false,
     aiProvider: provider,
-    aiModel: document.getElementById("aiModelSelect")?.value || defaultModel
+    aiModel: document.getElementById("aiModelSelect")?.value || defaultModel,
+    aiCustomPrompt: document.getElementById("aiCustomPrompt")?.value ?? settings.aiCustomPrompt ?? ""
   };
   if (key) {
     if (provider === "gemini") next.geminiApiKey = key;
