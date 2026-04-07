@@ -1281,6 +1281,363 @@
         }
       }
     </style>
+    <style>
+      /* ===== チュートリアル ===== */
+
+      /* ヘルプボタン（ヘッダー右上） */
+      .tutorial-help-wrapper {
+        position: absolute;
+        top: 12px;
+        right: 14px;
+      }
+      header {
+        position: relative;
+      }
+      .tutorial-help-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1.5px solid var(--ui-border, rgba(127,127,127,0.35));
+        background: var(--ui-surface-muted, #f5f5f5);
+        color: var(--ui-text-soft, #666);
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transition: all 0.2s;
+        line-height: 1;
+      }
+      .tutorial-help-btn:hover {
+        border-color: var(--ui-primary, #1976d2);
+        color: var(--ui-primary, #1976d2);
+        background: rgba(25,118,210,0.08);
+      }
+      html.dark-mode .tutorial-help-btn {
+        background: rgba(255,255,255,0.08);
+        color: rgba(255,255,255,0.6);
+      }
+      html.dark-mode .tutorial-help-btn:hover {
+        background: rgba(25,118,210,0.2);
+        color: #64b5f6;
+        border-color: #64b5f6;
+      }
+
+      /* チュートリアルメニュー */
+      .tutorial-menu {
+        position: absolute;
+        top: 36px;
+        right: 0;
+        width: 260px;
+        background: var(--ui-surface, #fff);
+        border: 1px solid var(--ui-border, rgba(127,127,127,0.25));
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        z-index: 100;
+        overflow: hidden;
+        animation: tutorialMenuIn 0.15s ease-out;
+      }
+      @keyframes tutorialMenuIn {
+        from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      html.dark-mode .tutorial-menu {
+        background: var(--ui-surface, #1e2d45);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      }
+      .tutorial-menu-header {
+        padding: 12px 14px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--ui-text-soft, #888);
+        border-bottom: 1px solid var(--ui-border, rgba(127,127,127,0.15));
+      }
+      .tutorial-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 12px 14px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        text-align: left;
+        transition: background 0.15s;
+        font-size: 13px;
+        border-radius: 0;
+      }
+      .tutorial-menu-item:hover {
+        background: rgba(25,118,210,0.06);
+      }
+      html.dark-mode .tutorial-menu-item:hover {
+        background: rgba(255,255,255,0.06);
+      }
+      .tutorial-menu-item + .tutorial-menu-item {
+        border-top: 1px solid var(--ui-border, rgba(127,127,127,0.1));
+      }
+      .tutorial-menu-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+        width: 28px;
+        text-align: center;
+      }
+      .tutorial-menu-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .tutorial-menu-item-title {
+        font-weight: 600;
+        font-size: 13px;
+        color: var(--ui-text, #222);
+      }
+      html.dark-mode .tutorial-menu-item-title {
+        color: var(--ui-text, #e0e0e0);
+      }
+      .tutorial-menu-item-desc {
+        font-size: 11px;
+        color: var(--ui-text-soft, #888);
+      }
+
+      /* オーバーレイ */
+      #tutorialOverlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+      }
+      #tutorialOverlay.active {
+        display: block;
+      }
+      .tutorial-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1;
+      }
+      .tutorial-spotlight {
+        position: fixed;
+        z-index: 2;
+        border-radius: 12px;
+        box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+        background: transparent;
+        transition: all 0.3s ease;
+        pointer-events: none;
+      }
+
+      /* チュートリアルカード */
+      .tutorial-card {
+        position: fixed;
+        z-index: 3;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+        overflow: hidden;
+        animation: tutorialCardIn 0.25s ease-out;
+      }
+      @keyframes tutorialCardIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      html.dark-mode .tutorial-card {
+        background: #1a2940;
+        box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+      }
+
+      .tutorial-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px 0;
+      }
+      .tutorial-step-indicator {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--ui-primary, #1976d2);
+        background: rgba(25,118,210,0.1);
+        padding: 3px 10px;
+        border-radius: 999px;
+      }
+      html.dark-mode .tutorial-step-indicator {
+        background: rgba(100,181,246,0.15);
+        color: #64b5f6;
+      }
+      .tutorial-close-btn {
+        width: 28px;
+        height: 28px;
+        border: none;
+        background: transparent;
+        font-size: 20px;
+        cursor: pointer;
+        color: var(--ui-text-soft, #888);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        transition: background 0.15s;
+      }
+      .tutorial-close-btn:hover {
+        background: rgba(0,0,0,0.06);
+      }
+      html.dark-mode .tutorial-close-btn:hover {
+        background: rgba(255,255,255,0.1);
+      }
+
+      .tutorial-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin: 12px 16px 6px;
+        color: var(--ui-text, #222);
+      }
+      html.dark-mode .tutorial-title {
+        color: #e8edf3;
+      }
+      .tutorial-body {
+        font-size: 13px;
+        line-height: 1.7;
+        color: var(--ui-text-soft, #555);
+        padding: 0 16px 8px;
+      }
+      html.dark-mode .tutorial-body {
+        color: #a0b0c4;
+      }
+
+      /* イラスト */
+      .tutorial-illustration {
+        padding: 0 16px 8px;
+      }
+      .tutorial-illust-box {
+        background: rgba(25,118,210,0.06);
+        border: 1px solid rgba(25,118,210,0.15);
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 13px;
+      }
+      html.dark-mode .tutorial-illust-box {
+        background: rgba(100,181,246,0.08);
+        border-color: rgba(100,181,246,0.2);
+      }
+      .tutorial-illust-path {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .tutorial-illust-icon {
+        font-size: 16px;
+      }
+      .tutorial-illust-arrow {
+        color: var(--ui-text-soft, #888);
+      }
+      .tutorial-illust-highlight {
+        background: var(--ui-primary, #1976d2);
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+      }
+      .tutorial-illust-url {
+        font-family: monospace;
+        font-size: 12px;
+        word-break: break-all;
+      }
+      .tutorial-illust-url .tutorial-illust-highlight {
+        font-family: monospace;
+      }
+
+      /* フッター */
+      .tutorial-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        border-top: 1px solid var(--ui-border, rgba(127,127,127,0.15));
+        gap: 8px;
+      }
+      .tutorial-footer-left {
+        flex-shrink: 0;
+      }
+      .tutorial-dismiss-label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        color: var(--ui-text-soft, #888);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .tutorial-dismiss-check {
+        width: 14px !important;
+        height: 14px;
+        margin: 0;
+      }
+      .tutorial-footer-right {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .tutorial-btn {
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--ui-border, rgba(127,127,127,0.3));
+        background: transparent;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+        color: var(--ui-text, #333);
+      }
+      .tutorial-btn:hover {
+        border-color: var(--ui-primary, #1976d2);
+        color: var(--ui-primary, #1976d2);
+      }
+      .tutorial-btn-primary {
+        background: var(--ui-primary, #1976d2);
+        color: #fff !important;
+        border-color: var(--ui-primary, #1976d2);
+      }
+      .tutorial-btn-primary:hover {
+        background: #1565c0;
+        border-color: #1565c0;
+      }
+      html.dark-mode .tutorial-btn {
+        color: #c0d0e0;
+        border-color: rgba(255,255,255,0.15);
+      }
+      html.dark-mode .tutorial-btn:hover {
+        border-color: #64b5f6;
+        color: #64b5f6;
+      }
+      html.dark-mode .tutorial-btn-primary {
+        background: #1976d2;
+        color: #fff !important;
+        border-color: #1976d2;
+      }
+
+      /* プログレスバー */
+      .tutorial-progress {
+        height: 3px;
+        background: var(--ui-border, rgba(127,127,127,0.15));
+      }
+      .tutorial-progress-bar {
+        height: 100%;
+        background: var(--ui-primary, #1976d2);
+        transition: width 0.3s ease;
+        border-radius: 0 3px 3px 0;
+      }
+    </style>
   </head>
   <body>
     <header>
@@ -1976,5 +2333,6 @@
     <script src="js/form.js"></script>
     <script src="js/api-setup.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/tutorial.js"></script>
   </body>
 </html>
