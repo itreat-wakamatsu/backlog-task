@@ -3,7 +3,8 @@
     "@resvg/resvg-js": "^2.6.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.0"
+    "@playwright/test": "^1.49.0",
+    "puppeteer": "^24.42.0"
   },
   "scripts": {
     "pack:store": "node pack-store.mjs",
