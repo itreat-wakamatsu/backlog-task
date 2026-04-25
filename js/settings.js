@@ -102,7 +102,7 @@ async function loadSettingsUI() {
   document.getElementById("aiSuggestProjectAssignee").checked = settings.aiSuggestProjectAssignee !== false;
   const customPromptEl = document.getElementById("aiCustomPrompt");
   if (customPromptEl) customPromptEl.value = settings.aiCustomPrompt ?? "";
-  const provider = settings.aiProvider || "openai";
+  const provider = settings.aiProvider || "gemini";
   // APIキー設定前は後で更新するので一旦ここは provider の後に処理
   const providerEl = document.getElementById("aiProviderSelect");
   if (providerEl) providerEl.value = provider;

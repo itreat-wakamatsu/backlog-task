@@ -1,7 +1,8 @@
 (function () {
-  // Google Apps Script のデプロイURL（プロキシ経由でGitHub Issueを作成）
-  // 設定手順は docs/feedback-proxy-setup.md を参照
-  const APPS_SCRIPT_URL = "";
+  const GITHUB_REPO = "itreat-wakamatsu/backlog-task";
+  // js/feedback-token.js（.gitignore済み）で GITHUB_FEEDBACK_TOKEN を定義してください
+  // テンプレート: js/feedback-token.template.js をコピーして作成
+  const GITHUB_TOKEN = (typeof GITHUB_FEEDBACK_TOKEN !== "undefined") ? GITHUB_FEEDBACK_TOKEN : "";
 
   function openModal(id) {
     const el = document.getElementById(id);
@@ -89,29 +90,22 @@
     const titleStr = `[${labelName}] ${text.split("\n")[0].slice(0, 60)}`;
     const bodyStr = [text, "", "---", "_Backlog Quick Add フィードバックフォームより_"].join("\n");
 
-    if (!APPS_SCRIPT_URL) {
-      setFeedbackState("error");
-      const statusEl = document.getElementById("feedbackStatus");
-      if (statusEl) {
-        statusEl.textContent = "フィードバック機能は現在設定中です。しばらくお待ちください。";
-        statusEl.dataset.ok = "0";
-        statusEl.hidden = false;
-      }
-      return;
-    }
-
     setFeedbackState("sending");
     try {
-      const res = await fetch(APPS_SCRIPT_URL, {
+      const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: titleStr, body: bodyStr, label: category }),
+        headers: {
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+          "Content-Type": "application/json",
+          Accept: "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+        body: JSON.stringify({ title: titleStr, body: bodyStr, labels: [category] }),
       });
-      const json = await res.json().catch(() => ({}));
-      if (json.ok) {
+      if (res.ok) {
         setFeedbackState("success");
       } else {
-        console.error("[BQA feedback] proxy error", json);
+        console.error("[BQA feedback] GitHub API error", res.status);
         setFeedbackState("error");
       }
     } catch (err) {

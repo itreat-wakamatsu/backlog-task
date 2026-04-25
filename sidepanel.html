@@ -1743,8 +1743,8 @@
             <h3>プロバイダ</h3>
             <label>
               <select id="aiProviderSelect">
-                <option value="openai">OpenAI (GPT)</option>
                 <option value="gemini">Gemini (Google AI)</option>
+                <option value="openai">OpenAI (GPT)</option>
               </select>
             </label>
           </div>
@@ -2213,6 +2213,41 @@
           </div>
 
           <div class="bqa-guide-section">
+            <h3>Backlog API キーの設定</h3>
+            <p style="margin:0; color:var(--ui-text-soft); font-size:12px">
+              初回のみ必要な設定です。Backlog の個人設定から API キーを発行して拡張機能に登録してください。
+            </p>
+            <div class="bqa-step">
+              <span class="bqa-step-num">1</span>
+              <div class="bqa-step-body">
+                <strong>Backlog にログインして個人設定を開く</strong>
+                右上のアイコン →「個人設定」をクリック
+              </div>
+            </div>
+            <div class="bqa-step">
+              <span class="bqa-step-num">2</span>
+              <div class="bqa-step-body">
+                <strong>API キーを発行する</strong>
+                左メニューの「API」→「メモ」に任意の名前（例: Chrome拡張）を入力 →「登録」をクリック
+              </div>
+            </div>
+            <div class="bqa-step">
+              <span class="bqa-step-num">3</span>
+              <div class="bqa-step-body">
+                <strong>APIキーをコピーする</strong>
+                生成されたキーをコピーしてください。<strong style="color:var(--ui-text)">このページを離れると再表示されません</strong>
+              </div>
+            </div>
+            <div class="bqa-step">
+              <span class="bqa-step-num">4</span>
+              <div class="bqa-step-body">
+                <strong>拡張機能に貼り付けて保存</strong>
+                拡張機能を開くと初期設定画面が表示されます。スペースID（例: <code style="font-size:11px; background:var(--ui-surface-muted); border:1px solid var(--ui-border); border-radius:4px; padding:1px 5px">itreatinc</code>）と API キーを入力して「保存」をクリック
+              </div>
+            </div>
+          </div>
+
+          <div class="bqa-guide-section">
             <h3>AI自動入力の設定</h3>
             <p style="margin:0; color:var(--ui-text-soft); font-size:12px">
               APIキーを設定すると、選択テキストから件名・詳細・担当者・期日などを自動入力できます。
@@ -2352,6 +2387,7 @@
     <script src="js/form.js"></script>
     <script src="js/api-setup.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/feedback-token.js"></script>
     <script src="js/help.js"></script>
   </body>
 </html>

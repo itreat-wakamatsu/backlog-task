@@ -332,7 +332,7 @@ async function callGemini(apiKey, model, messages) {
  * 設定とプロバイダから利用するAI APIキーを取得（OpenAI/Gemini 別管理、旧 aiApiKey にフォールバック）
  */
 function getAiApiKey(settings) {
-  const provider = (settings.aiProvider || "openai").toLowerCase();
+  const provider = (settings.aiProvider || "gemini").toLowerCase();
   const key = provider === "gemini" ? (settings.geminiApiKey || settings.aiApiKey) : (settings.openaiApiKey || settings.aiApiKey);
   return (key ?? "").trim();
 }
@@ -429,7 +429,7 @@ async function _runAiSuggestCore() {
     if (settings.debugAiLog) {
       console.log("[Backlog Quick Add / AI] プロンプト", { system, user });
     }
-    const provider = (settings.aiProvider || "openai").toLowerCase();
+    const provider = (settings.aiProvider || "gemini").toLowerCase();
     let model = settings.aiModel || (provider === "gemini" ? "gemini-2.5-flash-lite" : "gpt-4o-mini");
     if (provider === "gemini") {
       const m = String(model);
