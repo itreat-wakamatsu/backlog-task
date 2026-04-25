@@ -389,8 +389,8 @@ async function runAiSuggest() {
 async function _runAiSuggestCore() {
   const settings = await getSettings();
   const apiKey = getAiApiKey(settings);
-  if (!settings.aiEnabled || !apiKey) {
-    updateAiStatus("AI自動入力: オフ");
+  if (!apiKey) {
+    updateAiStatus("AI自動入力: APIキー未設定");
     return false;
   }
 
@@ -505,29 +505,28 @@ async function updateAiStatusFromSettings() {
   if (!statusEl && !hintEl) return;
   const settings = await getSettings();
   const hasKey = !!getAiApiKey(settings);
-  const isReady = settings.aiEnabled && hasKey;
+  const autoEnabled = settings.aiEnabled && hasKey;
 
-  if (!isReady) {
-    if (statusEl) {
-      statusEl.textContent = settings.aiEnabled && !hasKey ? "AI自動入力: APIキー未設定" : "AI自動入力: オフ";
-    }
-    if (hintEl) hintEl.textContent = "設定で「AI自動入力を有効にする」とAPIキーを保存すると、課題の件名・詳細・担当者・カテゴリ・期日等を自動入力できます。";
+  if (!hasKey) {
+    if (statusEl) statusEl.textContent = "AI自動入力: APIキー未設定";
+    if (hintEl) hintEl.textContent = "設定でAPIキーを保存すると、課題の件名・詳細・担当者・カテゴリ・期日等を自動入力できます。";
+  } else if (!settings.aiEnabled) {
+    if (statusEl) statusEl.textContent = "AI自動入力: 手動モード";
+    if (hintEl) hintEl.textContent = "「AIで自動入力」ボタンで実行できます。フォームを開いたときに自動実行するには設定でオンにしてください。";
   } else {
     if (statusEl) statusEl.textContent = "AI自動入力: 利用可能";
     if (hintEl) hintEl.textContent = "選択テキストとページ情報から課題を自動入力します。「AIで自動入力」ボタンで再実行できます。";
   }
 
-  // ボタンは常に表示するが、未設定時はスタイルで区別（クリック時にメッセージ表示）
-  if (btnEl) btnEl.dataset.aiReady = isReady ? "1" : "0";
+  // ボタンはAPIキーがあれば常に使用可能
+  if (btnEl) btnEl.dataset.aiReady = hasKey ? "1" : "0";
 }
 
 document.getElementById("aiSuggestBtn")?.addEventListener("click", async () => {
   const settings = await getSettings();
-  if (!settings.aiEnabled || !getAiApiKey(settings)) {
-    const msg = !getAiApiKey(settings)
-      ? "AI自動入力を使用するには、設定でAPIキーを入力してください。"
-      : "AI自動入力が無効です。設定で「AI自動入力を有効にする」をオンにしてください。";
-    if (typeof setTopNotification === "function") setTopNotification(msg, true);
+  if (!getAiApiKey(settings)) {
+    if (typeof setTopNotification === "function")
+      setTopNotification("AI自動入力を使用するには、設定でAPIキーを入力してください。", true);
     return;
   }
   runAiSuggest();

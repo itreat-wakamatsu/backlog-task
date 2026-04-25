@@ -1487,6 +1487,9 @@
         padding: 1px 5px;
         color: var(--ui-text);
       }
+
+      #feedbackStatus[data-ok="1"] { color: #16a34a; }
+      #feedbackStatus[data-ok="0"] { color: #dc2626; }
     </style>
   </head>
   <body>
@@ -2302,7 +2305,7 @@
         </div>
         <div class="bqa-modal-body">
           <p style="margin:0; color:var(--ui-text-soft); font-size:12px">
-            バグ・要望・使いにくい点などをお知らせください。送信するとGitHub Issueの作成ページが開きます。
+            バグ・要望・使いにくい点などをお知らせください。カテゴリと内容を選んで「送信する」を押すだけです。
           </p>
           <label style="display:grid; gap:6px; font-size:12px; font-weight:600; color:var(--ui-text-soft)">
             カテゴリ
@@ -2321,11 +2324,12 @@
               style="min-height:90px; font-size:13px"
             ></textarea>
           </label>
-          <button id="feedbackSubmit" class="primary" style="width:100%">GitHub で送信 →</button>
-          <p style="margin:0; color:var(--ui-text-soft); font-size:11px; text-align:center; line-height:1.5">
-            GitHubアカウントでログインした状態でページが開きます。<br>
-            内容を確認して「Submit new issue」をクリックしてください。
-          </p>
+          <button id="feedbackSubmit" class="primary" style="width:100%">送信する</button>
+          <p
+            id="feedbackStatus"
+            style="margin:0; font-size:12px; text-align:center; font-weight:600"
+            hidden
+          ></p>
         </div>
       </div>
     </div>
