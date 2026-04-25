@@ -13,18 +13,20 @@ function formatFetchedAt(ts) {
 }
 
 function showSettingsPanel() {
-  document.body.classList.add("settings-visible");
-  document.getElementById("settingsPanel").hidden = false;
-  document.getElementById("headerLinks").hidden = true;
+  document.getElementById("settingsModal").hidden = false;
   loadSettingsUI();
 }
 
 function hideSettingsPanel() {
-  document.body.classList.remove("settings-visible");
-  document.getElementById("settingsPanel").hidden = true;
-  document.getElementById("mainForm").hidden = false;
-  document.getElementById("headerLinks").hidden = false;
-  document.getElementById("pageMeta").textContent = "タスクを入力してください";
+  document.getElementById("settingsModal").hidden = true;
+}
+
+function flashSaved() {
+  const el = document.getElementById("settingsSavedToast");
+  if (!el) return;
+  el.classList.add("is-visible");
+  clearTimeout(flashSaved._t);
+  flashSaved._t = setTimeout(() => el.classList.remove("is-visible"), 1600);
 }
 
 const AI_MODELS_BY_PROVIDER = {
@@ -102,8 +104,7 @@ async function loadSettingsUI() {
   document.getElementById("aiSuggestProjectAssignee").checked = settings.aiSuggestProjectAssignee !== false;
   const customPromptEl = document.getElementById("aiCustomPrompt");
   if (customPromptEl) customPromptEl.value = settings.aiCustomPrompt ?? "";
-  const provider = settings.aiProvider || "openai";
-  // APIキー設定前は後で更新するので一旦ここは provider の後に処理
+  const provider = settings.aiProvider || "gemini";
   const providerEl = document.getElementById("aiProviderSelect");
   if (providerEl) providerEl.value = provider;
   setAiModelOptions(provider);
@@ -127,7 +128,13 @@ document.getElementById("settingsLink")?.addEventListener("click", (e) => {
   showSettingsPanel();
 });
 
-document.getElementById("settingsBack")?.addEventListener("click", () => hideSettingsPanel());
+document.getElementById("settingsModalClose")?.addEventListener("click", () => hideSettingsPanel());
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !document.getElementById("settingsModal")?.hidden) {
+    hideSettingsPanel();
+  }
+});
 
 document.getElementById("settingsApiKeyChange")?.addEventListener("click", async (e) => {
   e.preventDefault();
@@ -187,6 +194,7 @@ async function saveSettingsApiKey() {
       "最終取得: " + formatFetchedAt(BQA.cache?.fetchedAt);
     inputEl.value = "";
     form.hidden = true;
+    flashSaved();
   } catch (e) {
     errorEl.textContent = "確認に失敗しました: " + (e?.message ?? String(e));
     errorEl.hidden = false;
@@ -207,9 +215,10 @@ document.getElementById("settingsRefreshProjects")?.addEventListener("click", as
     await loadCache();
     document.getElementById("cacheFetchedAt").textContent =
       "最終取得: " + formatFetchedAt(BQA.cache?.fetchedAt);
+    flashSaved();
   } finally {
     btn.disabled = false;
-    btn.textContent = "プロジェクト・担当者情報の更新";
+    btn.textContent = "情報を更新";
   }
 });
 
@@ -223,30 +232,37 @@ document.getElementById("openTaskAfterSubmit")?.addEventListener("change", async
     openTaskAfterSubmit: checked,
     openTaskInBackground: checked ? (await getSettings()).openTaskInBackground : false
   });
+  flashSaved();
 });
 
 document.getElementById("openTaskInBackground")?.addEventListener("change", async (e) => {
   await saveSettings({ ...(await getSettings()), openTaskInBackground: e.target.checked });
+  flashSaved();
 });
 
 document.getElementById("openInPopup")?.addEventListener("change", async (e) => {
   await saveSettings({ ...(await getSettings()), openInPopup: e.target.checked });
+  flashSaved();
 });
 
 document.getElementById("debugDryRun")?.addEventListener("change", async (e) => {
   await saveSettings({ ...(await getSettings()), debugDryRun: e.target.checked });
+  flashSaved();
 });
 
 document.getElementById("debugAiLog")?.addEventListener("change", async (e) => {
   await saveSettings({ ...(await getSettings()), debugAiLog: e.target.checked });
+  flashSaved();
 });
 
 document.getElementById("aiEnabled")?.addEventListener("change", async (e) => {
   await saveSettings({ ...(await getSettings()), aiEnabled: e.target.checked });
+  flashSaved();
 });
 
 document.getElementById("aiSuggestProjectAssignee")?.addEventListener("change", async (e) => {
   await saveSettings({ ...(await getSettings()), aiSuggestProjectAssignee: e.target.checked });
+  flashSaved();
 });
 
 document.getElementById("aiProviderSelect")?.addEventListener("change", async (e) => {
@@ -267,14 +283,17 @@ document.getElementById("aiProviderSelect")?.addEventListener("change", async (e
     aiProvider: provider,
     aiModel: defaultModel
   });
+  flashSaved();
 });
 
 document.getElementById("aiModelSelect")?.addEventListener("change", async (e) => {
   await saveSettings({ ...(await getSettings()), aiModel: e.target.value || "gpt-4o-mini" });
+  flashSaved();
 });
 
 document.getElementById("aiCustomPrompt")?.addEventListener("change", async (e) => {
   await saveSettings({ ...(await getSettings()), aiCustomPrompt: e.target.value });
+  flashSaved();
 });
 
 document.getElementById("aiApiKeySave")?.addEventListener("click", saveAiSettings);
@@ -304,4 +323,5 @@ async function saveAiSettings() {
   const hasKeyAfter = !!getAiApiKeyForProvider(next, next.aiProvider);
   updateAiApiKeyPlaceholder(next.aiProvider, hasKeyAfter);
   updateAiEnabledState(hasKeyAfter);
+  flashSaved();
 }
