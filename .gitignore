@@ -1,6 +1,5 @@
 /dist
 /node_modules
-/js/feedback-token.js
 /.playwright-user-data
 /test-results
 /playwright-report

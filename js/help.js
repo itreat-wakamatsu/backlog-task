@@ -1,10 +1,7 @@
 (function () {
-  // GitHub リポジトリ（フィードバック送信先）
-  const GITHUB_REPO = "itreat-wakamatsu/backlog-task";
-  // GitHub fine-grained PAT（Issues: Read and write のみ）
-  // 空のままではフィードバック送信できません。管理者が設定してください。
-  // js/feedback-token.js（gitignore済み）で定義。未定義時はフォールバック動作。
-  const GITHUB_TOKEN = (typeof GITHUB_FEEDBACK_TOKEN !== "undefined") ? GITHUB_FEEDBACK_TOKEN : "";
+  // Google Apps Script のデプロイURL（プロキシ経由でGitHub Issueを作成）
+  // 設定手順は docs/feedback-proxy-setup.md を参照
+  const APPS_SCRIPT_URL = "";
 
   function openModal(id) {
     const el = document.getElementById(id);
@@ -92,36 +89,29 @@
     const titleStr = `[${labelName}] ${text.split("\n")[0].slice(0, 60)}`;
     const bodyStr = [text, "", "---", "_Backlog Quick Add フィードバックフォームより_"].join("\n");
 
-    if (!GITHUB_TOKEN) {
-      // トークン未設定時はフォールバック（GitHub ページを開く）
-      const title = encodeURIComponent(titleStr);
-      const body = encodeURIComponent(bodyStr);
-      chrome.tabs.create({
-        url: `https://github.com/${GITHUB_REPO}/issues/new?title=${title}&body=${body}&labels=${encodeURIComponent(category)}`,
-      });
+    if (!APPS_SCRIPT_URL) {
+      setFeedbackState("error");
+      const statusEl = document.getElementById("feedbackStatus");
+      if (statusEl) {
+        statusEl.textContent = "フィードバック機能は現在設定中です。しばらくお待ちください。";
+        statusEl.dataset.ok = "0";
+        statusEl.hidden = false;
+      }
       return;
     }
 
     setFeedbackState("sending");
     try {
-      const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/issues`, {
+      const res = await fetch(APPS_SCRIPT_URL, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${GITHUB_TOKEN}`,
-          "Content-Type": "application/json",
-          Accept: "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
-        body: JSON.stringify({
-          title: titleStr,
-          body: bodyStr,
-          labels: [category],
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: titleStr, body: bodyStr, label: category }),
       });
-      if (res.ok) {
+      const json = await res.json().catch(() => ({}));
+      if (json.ok) {
         setFeedbackState("success");
       } else {
-        console.error("[BQA feedback] GitHub API error", res.status, await res.text());
+        console.error("[BQA feedback] proxy error", json);
         setFeedbackState("error");
       }
     } catch (err) {
