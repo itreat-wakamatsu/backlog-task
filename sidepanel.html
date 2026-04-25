@@ -1280,11 +1280,221 @@
           display: none !important;
         }
       }
+
+      /* ヘルプ・フィードバック ボタン */
+      .headerTop {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 5px;
+      }
+
+      .headerTop h1 {
+        margin: 0;
+      }
+
+      .headerIconBtn {
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+        padding: 0;
+        background: var(--ui-surface-muted);
+        border: 1px solid var(--ui-border);
+        border-radius: 999px;
+        color: var(--ui-text-soft);
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.15s, border-color 0.15s, background 0.15s;
+        margin-top: 1px;
+      }
+
+      .headerIconBtn:hover {
+        color: var(--ui-primary);
+        border-color: var(--ui-primary);
+        background: rgba(37, 99, 235, 0.07);
+      }
+
+      html.dark-mode .headerIconBtn:hover {
+        background: rgba(96, 165, 250, 0.12);
+      }
+
+      /* モーダル共通 */
+      .bqa-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        background: rgba(0, 0, 0, 0.45);
+        display: flex;
+        align-items: flex-start;
+        justify-content: stretch;
+        padding: 16px;
+        overflow-y: auto;
+      }
+
+      .bqa-modal-card {
+        background: var(--ui-surface);
+        border-radius: 18px;
+        border: 1px solid var(--ui-border);
+        box-shadow: var(--ui-shadow);
+        width: 100%;
+        margin: auto 0;
+        overflow: hidden;
+      }
+
+      .bqa-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid var(--ui-border);
+      }
+
+      .bqa-modal-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ui-text);
+        margin: 0;
+      }
+
+      .bqa-modal-close {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        padding: 0;
+        background: var(--ui-surface-muted);
+        border: 1px solid var(--ui-border);
+        border-radius: 999px;
+        color: var(--ui-text-soft);
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.15s, background 0.15s;
+      }
+
+      .bqa-modal-close:hover {
+        color: var(--ui-text);
+        background: var(--ui-border);
+      }
+
+      .bqa-modal-body {
+        padding: 16px;
+        display: grid;
+        gap: 16px;
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--ui-text);
+      }
+
+      /* ヘルプ モーダル */
+      .bqa-guide-section {
+        display: grid;
+        gap: 10px;
+      }
+
+      .bqa-guide-section h3 {
+        margin: 0;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--ui-text-soft);
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--ui-border);
+      }
+
+      .bqa-step {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        font-size: 12px;
+        color: var(--ui-text-soft);
+      }
+
+      .bqa-step-num {
+        background: var(--ui-primary);
+        color: #fff;
+        width: 20px;
+        height: 20px;
+        min-width: 20px;
+        border-radius: 50%;
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 1px;
+      }
+
+      .bqa-step-body strong {
+        display: block;
+        color: var(--ui-text);
+        font-size: 13px;
+        margin-bottom: 2px;
+      }
+
+      .bqa-provider-card {
+        padding: 12px;
+        border: 1px solid var(--ui-border);
+        border-radius: 12px;
+        background: var(--ui-surface-muted);
+        display: grid;
+        gap: 8px;
+      }
+
+      .bqa-provider-name {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ui-text);
+      }
+
+      .bqa-ext-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        color: var(--ui-primary);
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border: 1px solid var(--ui-border);
+        border-radius: 8px;
+        background: var(--ui-surface);
+        margin-top: 4px;
+        transition: background 0.15s, border-color 0.15s;
+      }
+
+      .bqa-ext-link:hover {
+        background: rgba(37, 99, 235, 0.08);
+        border-color: var(--ui-primary);
+      }
+
+      html.dark-mode .bqa-ext-link:hover {
+        background: rgba(96, 165, 250, 0.12);
+      }
+
+      kbd {
+        font-family: inherit;
+        font-size: 11px;
+        background: var(--ui-surface-muted);
+        border: 1px solid var(--ui-border);
+        border-radius: 4px;
+        padding: 1px 5px;
+        color: var(--ui-text);
+      }
     </style>
   </head>
   <body>
     <header>
-      <h1>Backlog タスク登録</h1>
+      <div class="headerTop">
+        <h1>Backlog タスク登録</h1>
+        <button id="helpBtn" class="headerIconBtn" title="使い方ガイド">？</button>
+      </div>
       <p
         id="pageMeta"
         class="muted"
@@ -1300,6 +1510,11 @@
           href="#"
           id="settingsLink"
           >設定</a
+        >
+        <a
+          href="#"
+          id="feedbackLink"
+          >フィードバック</a
         >
       </p>
     </header>
@@ -1958,6 +2173,163 @@
     </div>
     <!-- /contentArea -->
 
+    <!-- ヘルプ モーダル -->
+    <div id="helpModal" class="bqa-modal" hidden>
+      <div class="bqa-modal-card">
+        <div class="bqa-modal-header">
+          <h2 class="bqa-modal-title">使い方ガイド</h2>
+          <button id="helpModalClose" class="bqa-modal-close" title="閉じる">✕</button>
+        </div>
+        <div class="bqa-modal-body">
+
+          <div class="bqa-guide-section">
+            <h3>基本的な使い方</h3>
+            <div class="bqa-step">
+              <span class="bqa-step-num">1</span>
+              <div class="bqa-step-body">
+                <strong>タスクにしたいテキストを選択</strong>
+                Webページ上で課題にしたい文章をドラッグして選択します
+              </div>
+            </div>
+            <div class="bqa-step">
+              <span class="bqa-step-num">2</span>
+              <div class="bqa-step-body">
+                <strong>フォームを開く（3つの方法）</strong>
+                選択範囲を右クリック →「Backlogにタスク作成」<br>
+                または拡張機能アイコンをクリック<br>
+                または <kbd>Ctrl+Shift+B</kbd>（Mac: <kbd>⌘+Shift+B</kbd>）
+              </div>
+            </div>
+            <div class="bqa-step">
+              <span class="bqa-step-num">3</span>
+              <div class="bqa-step-body">
+                <strong>内容を確認して送信</strong>
+                プロジェクト・件名・詳細などを確認・編集してから「送信」をクリック
+              </div>
+            </div>
+          </div>
+
+          <div class="bqa-guide-section">
+            <h3>AI自動入力の設定</h3>
+            <p style="margin:0; color:var(--ui-text-soft); font-size:12px">
+              APIキーを設定すると、選択テキストから件名・詳細・担当者・期日などを自動入力できます。
+              GoogleのGeminiまたはOpenAIのGPTが利用できます（どちらか一方でOK）。
+            </p>
+
+            <div class="bqa-provider-card">
+              <div class="bqa-provider-name">🟣 Google Gemini（無料枠あり）</div>
+              <div class="bqa-step">
+                <span class="bqa-step-num">1</span>
+                <div class="bqa-step-body">
+                  <strong>Google AI Studio を開く</strong>
+                  <a class="bqa-ext-link" data-url="https://aistudio.google.com/app/apikey">
+                    Google AI Studio を開く →
+                  </a>
+                </div>
+              </div>
+              <div class="bqa-step">
+                <span class="bqa-step-num">2</span>
+                <div class="bqa-step-body">
+                  <strong>「APIキーを作成」をクリック</strong>
+                  プロジェクトを選択してキーを発行します
+                </div>
+              </div>
+              <div class="bqa-step">
+                <span class="bqa-step-num">3</span>
+                <div class="bqa-step-body">
+                  <strong>拡張機能の設定に貼り付け</strong>
+                  「設定 → AI自動入力」で Gemini を選択し、APIキー欄に貼り付けて保存
+                </div>
+              </div>
+            </div>
+
+            <div class="bqa-provider-card">
+              <div class="bqa-provider-name">🟢 OpenAI（GPT）</div>
+              <div class="bqa-step">
+                <span class="bqa-step-num">1</span>
+                <div class="bqa-step-body">
+                  <strong>OpenAI Platform を開く</strong>
+                  <a class="bqa-ext-link" data-url="https://platform.openai.com/api-keys">
+                    OpenAI Platform を開く →
+                  </a>
+                </div>
+              </div>
+              <div class="bqa-step">
+                <span class="bqa-step-num">2</span>
+                <div class="bqa-step-body">
+                  <strong>「+ Create new secret key」をクリック</strong>
+                  表示されたキーをコピーしてください（以降は再表示されません）
+                </div>
+              </div>
+              <div class="bqa-step">
+                <span class="bqa-step-num">3</span>
+                <div class="bqa-step-body">
+                  <strong>拡張機能の設定に貼り付け</strong>
+                  「設定 → AI自動入力」で OpenAI を選択し、APIキー欄に貼り付けて保存
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bqa-guide-section">
+            <h3>ヒント</h3>
+            <ul style="margin:0; padding-left:18px; color:var(--ui-text-soft); font-size:12px; display:grid; gap:6px">
+              <li>
+                <strong style="color:var(--ui-text)">Google ドキュメント</strong>
+                テキスト選択後に <kbd>Ctrl+C</kbd>（Mac: <kbd>⌘C</kbd>）でコピーしてからフォームを開くと、詳細欄への自動反映がより確実です
+              </li>
+              <li>
+                <strong style="color:var(--ui-text)">URLごとのプロジェクト記憶</strong>
+                フォーム上の「このページでは常にこのプロジェクトを使用する」にチェックを入れると、次回から自動適用されます
+              </li>
+              <li>
+                <strong style="color:var(--ui-text)">カスタム指示</strong>
+                「設定 → AI自動入力 → カスタム指示」に独自のルール（プロジェクト・担当者の振り分けなど）を記述するとAIがそれを最優先で適用します
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- フィードバック モーダル -->
+    <div id="feedbackModal" class="bqa-modal" hidden>
+      <div class="bqa-modal-card">
+        <div class="bqa-modal-header">
+          <h2 class="bqa-modal-title">フィードバック</h2>
+          <button id="feedbackModalClose" class="bqa-modal-close" title="閉じる">✕</button>
+        </div>
+        <div class="bqa-modal-body">
+          <p style="margin:0; color:var(--ui-text-soft); font-size:12px">
+            バグ・要望・使いにくい点などをお知らせください。送信するとGitHub Issueの作成ページが開きます。
+          </p>
+          <label style="display:grid; gap:6px; font-size:12px; font-weight:600; color:var(--ui-text-soft)">
+            カテゴリ
+            <select id="feedbackCategory" style="font-size:13px">
+              <option value="bug">🐛 バグ報告</option>
+              <option value="enhancement">✨ 機能要望</option>
+              <option value="ux">💬 使いにくい点</option>
+              <option value="other">📌 その他・質問</option>
+            </select>
+          </label>
+          <label style="display:grid; gap:6px; font-size:12px; font-weight:600; color:var(--ui-text-soft)">
+            詳細
+            <textarea
+              id="feedbackText"
+              placeholder="詳しく教えてください（任意）"
+              style="min-height:90px; font-size:13px"
+            ></textarea>
+          </label>
+          <button id="feedbackSubmit" class="primary" style="width:100%">GitHub で送信 →</button>
+          <p style="margin:0; color:var(--ui-text-soft); font-size:11px; text-align:center; line-height:1.5">
+            GitHubアカウントでログインした状態でページが開きます。<br>
+            内容を確認して「Submit new issue」をクリックしてください。
+          </p>
+        </div>
+      </div>
+    </div>
+
     <script src="vendor/jquery.min.js"></script>
     <script src="vendor/select2.min.js"></script>
     <script src="vendor/marked.min.js"></script>
@@ -1976,5 +2348,6 @@
     <script src="js/form.js"></script>
     <script src="js/api-setup.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/help.js"></script>
   </body>
 </html>
