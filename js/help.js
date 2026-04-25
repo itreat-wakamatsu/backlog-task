@@ -3,7 +3,8 @@
   const GITHUB_REPO = "itreat-wakamatsu/backlog-task";
   // GitHub fine-grained PAT（Issues: Read and write のみ）
   // 空のままではフィードバック送信できません。管理者が設定してください。
-  const GITHUB_TOKEN = "";
+  // js/feedback-token.js（gitignore済み）で定義。未定義時はフォールバック動作。
+  const GITHUB_TOKEN = (typeof GITHUB_FEEDBACK_TOKEN !== "undefined") ? GITHUB_FEEDBACK_TOKEN : "";
 
   function openModal(id) {
     const el = document.getElementById(id);
