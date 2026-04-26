@@ -32,12 +32,19 @@ function stubChrome(page) {
   });
 }
 
-// API セットアップ画面
-{
+function applyDarkMode(page) {
+  return page.evaluate(() => {
+    document.documentElement.classList.add("dark-mode");
+  });
+}
+
+async function captureApiSetup(suffix, dark) {
   const page = await browser.newPage();
   await page.setViewport({ width: 420, height: 680, deviceScaleFactor: 2 });
+  if (dark) await page.emulateMediaFeatures([{ name: "prefers-color-scheme", value: "dark" }]);
   await page.goto(url, { waitUntil: "networkidle0" });
   await stubChrome(page);
+  if (dark) await applyDarkMode(page);
   await new Promise(r => setTimeout(r, 400));
   await page.evaluate(() => {
     document.getElementById("mainForm").hidden = true;
@@ -48,20 +55,20 @@ function stubChrome(page) {
     document.getElementById("apiSetupTitle").textContent = "初期設定";
     const back = document.getElementById("apiKeyBack");
     if (back) back.hidden = true;
-    // prefill placeholders
     const sid = document.getElementById("backlogSpaceId");
     if (sid) sid.placeholder = "your-space";
   });
-  await page.screenshot({ path: join(outDir, "screen-api-setup.png") });
+  await page.screenshot({ path: join(outDir, `screen-api-setup${suffix}.png`) });
   await page.close();
 }
 
-// メインフォーム（フォーム入力例付き）
-{
+async function captureMainForm(suffix, dark) {
   const page = await browser.newPage();
   await page.setViewport({ width: 420, height: 800, deviceScaleFactor: 2 });
+  if (dark) await page.emulateMediaFeatures([{ name: "prefers-color-scheme", value: "dark" }]);
   await page.goto(url, { waitUntil: "networkidle0" });
   await stubChrome(page);
+  if (dark) await applyDarkMode(page);
   await new Promise(r => setTimeout(r, 400));
   await page.evaluate(() => {
     document.getElementById("apiSetup").hidden = true;
@@ -72,7 +79,6 @@ function stubChrome(page) {
     mf.hidden = false;
     mf.classList.remove("hide-until-ready");
 
-    // フォームにサンプルデータを入力
     const title = document.getElementById("title");
     if (title) title.value = "ログイン画面のバリデーション修正";
     const desc = document.getElementById("description");
@@ -81,48 +87,37 @@ function stubChrome(page) {
     document.getElementById("helpModal").hidden = true;
     document.getElementById("feedbackModal").hidden = true;
   });
-  await page.screenshot({ path: join(outDir, "screen-main-form.png"), fullPage: true });
+  await page.screenshot({ path: join(outDir, `screen-main-form${suffix}.png`), fullPage: true });
   await page.close();
 }
 
-// モーダル: 設定
-{
+async function captureModal(modalId, name, suffix, dark) {
   const page = await browser.newPage();
   await page.setViewport({ width: 420, height: 700, deviceScaleFactor: 2 });
+  if (dark) await page.emulateMediaFeatures([{ name: "prefers-color-scheme", value: "dark" }]);
   await page.goto(url, { waitUntil: "networkidle0" });
   await stubChrome(page);
+  if (dark) await applyDarkMode(page);
   await new Promise(r => setTimeout(r, 300));
-  await page.evaluate(() => {
+  await page.evaluate((id) => {
     document.querySelector("header").style.display = "none";
     document.getElementById("contentArea").style.display = "none";
-    document.getElementById("settingsModal").hidden = false;
-  });
+    document.getElementById(id).hidden = false;
+  }, modalId);
   const card = await page.$(".bqa-modal-card");
   const box = await card?.boundingBox();
   const h = box ? Math.min(Math.ceil(box.y + box.height + 32), 1400) : 700;
   await page.setViewport({ width: 420, height: h, deviceScaleFactor: 2 });
-  await page.screenshot({ path: join(outDir, "screen-modal-settings.png") });
+  await page.screenshot({ path: join(outDir, `screen-modal-${name}${suffix}.png`) });
   await page.close();
 }
 
-// モーダル: ヘルプ
-{
-  const page = await browser.newPage();
-  await page.setViewport({ width: 420, height: 700, deviceScaleFactor: 2 });
-  await page.goto(url, { waitUntil: "networkidle0" });
-  await stubChrome(page);
-  await new Promise(r => setTimeout(r, 300));
-  await page.evaluate(() => {
-    document.querySelector("header").style.display = "none";
-    document.getElementById("contentArea").style.display = "none";
-    document.getElementById("helpModal").hidden = false;
-  });
-  const card = await page.$(".bqa-modal-card");
-  const box = await card?.boundingBox();
-  const h = box ? Math.min(Math.ceil(box.y + box.height + 32), 1400) : 700;
-  await page.setViewport({ width: 420, height: h, deviceScaleFactor: 2 });
-  await page.screenshot({ path: join(outDir, "screen-modal-help.png") });
-  await page.close();
+for (const dark of [false, true]) {
+  const suffix = dark ? "-dark" : "";
+  await captureApiSetup(suffix, dark);
+  await captureMainForm(suffix, dark);
+  await captureModal("settingsModal", "settings", suffix, dark);
+  await captureModal("helpModal", "help", suffix, dark);
 }
 
 await browser.close();
