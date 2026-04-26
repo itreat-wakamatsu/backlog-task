@@ -293,8 +293,8 @@
         ol
         li:has(input[type="checkbox"])
         input[type="checkbox"]:checked {
-        background-color: #1976d2;
-        border-color: #1976d2;
+        background-color: #42a35c;
+        border-color: #42a35c;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='white' stroke-width='2' d='M2 6l3 3 5-6'/%3E%3C/svg%3E");
         background-size: 10px 10px;
         background-position: center;
@@ -408,7 +408,7 @@
         border: 1px solid rgba(127, 127, 127, 0.4);
         border-radius: 6px;
         background: #fff;
-        color: #0078c8;
+        color: #2f7d40;
         font-size: 13px;
         cursor: pointer;
       }
@@ -481,7 +481,7 @@
       }
 
       .mentionItem.active {
-        background: #eef3ff;
+        background: #ecf7ee;
       }
       .mentionText {
         display: flex;
@@ -640,12 +640,12 @@
         text-decoration: underline;
       }
       .btnSubmit {
-        background: #1976d2 !important;
+        background: #42a35c !important;
         color: #fff !important;
         border: none !important;
       }
       .btnSubmit:hover:not(:disabled) {
-        background: #1565c0 !important;
+        background: #368547 !important;
       }
       .settingsApiKeyForm {
         margin-top: 12px;
@@ -724,7 +724,7 @@
           color: rgba(255, 255, 255, 0.95);
         }
         .select2-container--default .select2-results__option--highlighted[aria-selected] {
-          background-color: #1976d2;
+          background-color: #42a35c;
           color: #fff;
         }
         .select2-container--default .select2-results__option[aria-disabled=true] {
@@ -796,8 +796,8 @@
           background: rgba(255, 255, 255, 0.03);
         }
         .fileDropZone.dragover {
-          border-color: rgba(25, 118, 210, 0.6);
-          background: rgba(25, 118, 210, 0.08);
+          border-color: rgba(66, 163, 92, 0.6);
+          background: rgba(66, 163, 92, 0.08);
         }
         .fileDropZoneText {
           color: rgba(255, 255, 255, 0.8);
@@ -808,10 +808,10 @@
         .fileSelectBtn {
           border-color: rgba(255, 255, 255, 0.25);
           background: #2d2d2d;
-          color: #64b5f6;
+          color: #7ed496;
         }
         .fileSelectBtn:hover {
-          background: rgba(25, 118, 210, 0.15);
+          background: rgba(66, 163, 92, 0.15);
         }
         .fileItem {
           border-color: rgba(255, 255, 255, 0.12);
@@ -832,7 +832,7 @@
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         }
         .mentionItem.active {
-          background: rgba(25, 118, 210, 0.25);
+          background: rgba(66, 163, 92, 0.25);
         }
         .mentionHeader {
           color: rgba(255, 255, 255, 0.6);
@@ -845,15 +845,15 @@
     </style>
     <style>
       :root {
-        --ui-bg: #f3f6fb;
+        --ui-bg: #f3f8f5;
         --ui-surface: #ffffff;
-        --ui-surface-muted: #f6f9ff;
+        --ui-surface-muted: #f6fbf8;
         --ui-text: #1b2435;
         --ui-text-soft: #5f6c85;
-        --ui-border: #d7e0f0;
-        --ui-primary: #2563eb;
-        --ui-primary-hover: #1d4ed8;
-        --ui-ring: rgba(37, 99, 235, 0.24);
+        --ui-border: #d8e6dc;
+        --ui-primary: #42a35c;
+        --ui-primary-hover: #368547;
+        --ui-ring: rgba(66, 163, 92, 0.24);
         --ui-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
       }
 
@@ -864,9 +864,9 @@
         --ui-text: #e6edf9;
         --ui-text-soft: #a7b5cc;
         --ui-border: rgba(148, 163, 184, 0.35);
-        --ui-primary: #60a5fa;
-        --ui-primary-hover: #3b82f6;
-        --ui-ring: rgba(96, 165, 250, 0.3);
+        --ui-primary: #7ed496;
+        --ui-primary-hover: #5fb97a;
+        --ui-ring: rgba(126, 212, 150, 0.3);
         --ui-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
       }
 
@@ -877,7 +877,7 @@
       body {
         padding: 0;
         background:
-          radial-gradient(circle at top right, rgba(37, 99, 235, 0.1), transparent 52%),
+          radial-gradient(circle at top right, rgba(66, 163, 92, 0.1), transparent 52%),
           var(--ui-bg);
         color: var(--ui-text);
       }
@@ -1058,7 +1058,7 @@
         background: var(--ui-primary) !important;
         color: #fff !important;
         border: none !important;
-        box-shadow: 0 7px 16px rgba(37, 99, 235, 0.3);
+        box-shadow: 0 7px 16px rgba(66, 163, 92, 0.3);
       }
 
       .btnSubmit:hover:not(:disabled),
@@ -1120,11 +1120,11 @@
       .tb:hover:not(:disabled) {
         border-color: var(--ui-primary);
         color: var(--ui-primary);
-        background: rgba(37, 99, 235, 0.08);
+        background: rgba(66, 163, 92, 0.08);
       }
 
       html.dark-mode .tb:hover:not(:disabled) {
-        background: rgba(96, 165, 250, 0.16);
+        background: rgba(126, 212, 150, 0.16);
       }
 
       .fileDropZone {
@@ -1142,11 +1142,11 @@
 
       .fileSelectBtn:hover {
         border-color: var(--ui-primary);
-        background: rgba(37, 99, 235, 0.08);
+        background: rgba(66, 163, 92, 0.08);
       }
 
       html.dark-mode .fileSelectBtn:hover {
-        background: rgba(96, 165, 250, 0.16);
+        background: rgba(126, 212, 150, 0.16);
       }
 
       .actions {
@@ -1224,11 +1224,11 @@
       .headerIconBtn:hover {
         color: var(--ui-primary);
         border-color: var(--ui-primary);
-        background: rgba(37, 99, 235, 0.07);
+        background: rgba(66, 163, 92, 0.07);
       }
 
       html.dark-mode .headerIconBtn:hover {
-        background: rgba(96, 165, 250, 0.12);
+        background: rgba(126, 212, 150, 0.12);
       }
 
       /* モーダル共通 */
@@ -1379,12 +1379,12 @@
       }
 
       .bqa-ext-link:hover {
-        background: rgba(37, 99, 235, 0.08);
+        background: rgba(66, 163, 92, 0.08);
         border-color: var(--ui-primary);
       }
 
       html.dark-mode .bqa-ext-link:hover {
-        background: rgba(96, 165, 250, 0.12);
+        background: rgba(126, 212, 150, 0.12);
       }
 
       kbd {
@@ -1485,11 +1485,11 @@
       .bqa-inline-btn:hover:not(:disabled) {
         border-color: var(--ui-primary);
         color: var(--ui-primary);
-        background: rgba(37, 99, 235, 0.07);
+        background: rgba(66, 163, 92, 0.07);
         transform: none;
       }
       html.dark-mode .bqa-inline-btn:hover:not(:disabled) {
-        background: rgba(96, 165, 250, 0.12);
+        background: rgba(126, 212, 150, 0.12);
       }
     </style>
   </head>
