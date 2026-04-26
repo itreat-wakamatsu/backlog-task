@@ -53,6 +53,7 @@ async function screenshotModal(id, filename, extraSetup) {
 
 await screenshotModal("helpModal", "modal-help.png");
 await screenshotModal("feedbackModal", "modal-feedback.png");
+await screenshotModal("settingsModal", "modal-settings.png");
 
 await browser.close();
 console.log("Done →", outDir);

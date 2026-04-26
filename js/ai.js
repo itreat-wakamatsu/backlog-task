@@ -345,7 +345,6 @@ let _aiSuggestInProgress = false;
 
 /**
  * フォーム初期表示時用。AI有効かつドラフトにコンテキストがある場合に runAiSuggest を1回だけ実行する。
- * 拡張機能アイコンクリックで開いたとき（openedFrom === "action"）は自動実行しない。
  */
 async function maybeRunAiSuggestOnce() {
   if (_aiSuggestDidRunOnce) return false;
@@ -353,7 +352,6 @@ async function maybeRunAiSuggestOnce() {
   if (!settings.aiEnabled || !getAiApiKey(settings)) return false;
   const draft = await getDraft();
   if (!draft || (!draft.selectedText?.trim() && !draft.pageUrl?.trim())) return false;
-  if (draft.openedFrom === "action") return false;
   _aiSuggestDidRunOnce = true;
   return runAiSuggest();
 }

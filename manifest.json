@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Backlog Quick Add",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "選択テキストやページ情報からBacklogへ課題を作成。サイドパネルで入力し、任意でOpenAIまたはGeminiでフィールドを自動補完できます。",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -53,10 +53,10 @@
     "default_path": "sidepanel.html"
   },
   "commands": {
-    "open-task-form": {
+    "_execute_action": {
       "suggested_key": {
-        "default": "Ctrl+Shift+B",
-        "mac": "Command+Shift+B"
+        "default": "Ctrl+Shift+L",
+        "mac": "Command+Shift+L"
       },
       "description": "Backlogにタスク作成（選択テキストを詳細に貼り付け）"
     }

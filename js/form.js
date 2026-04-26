@@ -4,7 +4,7 @@ function showApiSetup(isEditMode = false) {
   apiSetup.hidden = false;
   mainForm.hidden = true;
   mainForm.classList.add("hide-until-ready");
-  document.getElementById("settingsPanel").hidden = true;
+  document.getElementById("settingsModal").hidden = true;
   document.getElementById("topNotification").hidden = true;
   document.getElementById("pageMeta").textContent = isEditMode ? "APIキーを変更" : "APIキーを設定してください";
   const backLink = document.getElementById("apiKeyBack");
@@ -17,7 +17,7 @@ function showMainForm() {
   const mainForm = document.getElementById("mainForm");
   const apiSetup = document.getElementById("apiSetup");
   apiSetup.hidden = true;
-  document.getElementById("settingsPanel").hidden = true;
+  document.getElementById("settingsModal").hidden = true;
   mainForm.classList.remove("hide-until-ready");
   mainForm.hidden = false;
   document.getElementById("pageMeta").textContent = "タスクを入力してください";
