@@ -55,8 +55,8 @@
   "commands": {
     "open-task-form": {
       "suggested_key": {
-        "default": "Ctrl+Shift+B",
-        "mac": "Command+Shift+B"
+        "default": "Ctrl+Shift+L",
+        "mac": "Command+Shift+L"
       },
       "description": "Backlogにタスク作成（選択テキストを詳細に貼り付け）"
     }
