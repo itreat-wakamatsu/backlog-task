@@ -162,6 +162,7 @@ export function setupActionClick(getSelectionFromTabRef) {
       return;
     }
 
+    chrome.sidePanel.setOptions({ tabId: tab.id, path: "sidepanel.html" }).catch(() => {});
     chrome.sidePanel.open({ tabId: tab.id }).catch(console.error);
     updateSidePanelOpen(tab.id, true);
     chrome.storage.local.get([SIDE_PANEL_OPEN_KEY]).then((obj) => {
@@ -169,11 +170,6 @@ export function setupActionClick(getSelectionFromTabRef) {
       sidePanelOpen[tab.id] = true;
       chrome.storage.local.set({ [SIDE_PANEL_OPEN_KEY]: sidePanelOpen });
     });
-
-    chrome.sidePanel.setOptions({
-      tabId: tab.id,
-      path: "sidepanel.html?from=action"
-    }).catch(console.error);
 
     const baseDraft = {
       selectedText: "",
@@ -183,7 +179,6 @@ export function setupActionClick(getSelectionFromTabRef) {
       openedFrom: "action"
     };
     chrome.storage.local.set({ draft: baseDraft });
-    chrome.sidePanel.setOptions({ tabId: tab.id, path: "sidepanel.html" }).catch(() => {});
 
     getSelectionFromTabRef(tab).then(({ text, url, title, surroundingBefore, surroundingAfter, documentBeginning }) => {
       const draft = {

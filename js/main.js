@@ -20,33 +20,23 @@
 // ポップアップモード検出
 (function () {
   const params = new URLSearchParams(location.search);
-  const fromActionUrl = params.get("from") === "action";
   const isPopupParam = params.get("popup") === "true";
-  const isSidePanel = fromActionUrl;
+  let isSidePanel = false;
 
-  let isPopup = false;
-  if (isSidePanel) {
-    document.documentElement.classList.remove("popup-mode");
-    document.body.classList.remove("popup-mode");
-    isPopup = false;
-  } else if (isPopupParam) {
-    isPopup = true;
-  } else {
-    isPopup = window.innerWidth <= 600;
-  }
-
+  const isPopup = isPopupParam || window.innerWidth <= 600;
   if (isPopup) {
     document.documentElement.classList.add("popup-mode");
     document.body.classList.add("popup-mode");
   }
 
-  // DRAFT_OPENED_FROM_ACTION は「アクションボタンで開いた」ときのみ送信する。
-  // isPopup（ポップアップ設定 or 幅が狭い）でも送信していたが、コンテキストメニューや
-  // キーボードショートカットで開いた場合に openedFrom が "action" に上書きされ
-  // AI 自動実行がブロックされるバグがあったため、fromActionUrl のみに限定する。
-  if (fromActionUrl) {
-    chrome.runtime.sendMessage({ type: "DRAFT_OPENED_FROM_ACTION" }).catch(() => {});
-  }
+  // サイドパネルコンテキストを非同期で確認し、ポップアップモードを解除
+  chrome.runtime.getContexts?.({ contextTypes: ["SIDE_PANEL"] }).then((ctxs) => {
+    isSidePanel = ctxs.some((c) => c.documentUrl === location.href);
+    if (isSidePanel) {
+      document.documentElement.classList.remove("popup-mode");
+      document.body.classList.remove("popup-mode");
+    }
+  }).catch(() => {});
 
   window.addEventListener("resize", () => {
     if (isSidePanel) {
@@ -76,19 +66,19 @@ async function init() {
 
   chrome.runtime.sendMessage({ type: "SIDE_PANEL_OPENED" }).catch(() => {});
 
-  // パネル新規ロード時: initMainForm() 完了後に contextMenu ドラフトを確認。
+  // パネル新規ロード時: initMainForm() 完了後にドラフトを確認。
   // DRAFT_UPDATED / storage.onChanged を見逃した場合（ドラフトがパネルロード前に書き込まれた場合）のフォールバック。
   (async () => {
     const obj = await chrome.storage.local.get([DRAFT_STORAGE_KEY]);
     const draft = obj[DRAFT_STORAGE_KEY];
     const isRecent = draft?.createdAt && (Date.now() - draft.createdAt < 30000);
-    if (draft?.openedFrom === "contextMenu" && isRecent) {
+    if ((draft?.openedFrom === "contextMenu" || draft?.openedFrom === "action") && isRecent) {
       // フォームにドラフトを反映（initMainForm 時点では getSelectionFromTab が未完了だった可能性があるため再適用）
       if (typeof applyDraftToForm === "function") await applyDraftToForm();
       // URL プロジェクト適用
       if (typeof applyUrlProjectFromDraft === "function") await applyUrlProjectFromDraft();
       if (typeof updateUseProjectCheckboxState === "function") await updateUseProjectCheckboxState();
-      maybeRunAiSuggestForContextMenu();
+      if (typeof maybeRunAiSuggestForContextMenu === "function") maybeRunAiSuggestForContextMenu();
     }
   })();
 
@@ -102,8 +92,8 @@ async function handleDraftUpdate(draft) {
   await applyDraftToForm();
   if (typeof applyUrlProjectFromDraft === "function") await applyUrlProjectFromDraft();
   if (typeof updateUseProjectCheckboxState === "function") await updateUseProjectCheckboxState();
-  if (draft?.openedFrom === "contextMenu") {
-    maybeRunAiSuggestForContextMenu();
+  if (draft?.openedFrom === "contextMenu" || draft?.openedFrom === "action") {
+    if (typeof maybeRunAiSuggestForContextMenu === "function") maybeRunAiSuggestForContextMenu();
   }
 }
 
@@ -119,7 +109,7 @@ chrome.runtime.onMessage.addListener((msg) => {
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local" || !changes[DRAFT_STORAGE_KEY]) return;
   const draft = changes[DRAFT_STORAGE_KEY].newValue;
-  if (draft?.openedFrom === "contextMenu") {
+  if (draft?.openedFrom === "contextMenu" || draft?.openedFrom === "action") {
     handleDraftUpdate(draft);
   }
 });

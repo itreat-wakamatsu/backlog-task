@@ -23,9 +23,22 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
-void chrome.storage.local.get([SETTINGS_KEY, SIDE_PANEL_OPEN_KEY]).then((obj) => {
+void chrome.storage.local.get([SETTINGS_KEY]).then((obj) => {
   setCachedSettings(obj[SETTINGS_KEY] ?? null);
-  setCachedSidePanelOpen(obj[SIDE_PANEL_OPEN_KEY] ?? {});
+});
+
+// Validate which side panels are actually open (corrects stale storage from previous sessions)
+void chrome.runtime.getContexts({ contextTypes: ["SIDE_PANEL"] }).then((contexts) => {
+  const open = {};
+  for (const ctx of contexts) {
+    if (ctx.tabId != null) open[ctx.tabId] = true;
+  }
+  setCachedSidePanelOpen(open);
+  chrome.storage.local.set({ [SIDE_PANEL_OPEN_KEY]: open });
+}).catch(() => {
+  void chrome.storage.local.get([SIDE_PANEL_OPEN_KEY]).then((obj) => {
+    setCachedSidePanelOpen(obj[SIDE_PANEL_OPEN_KEY] ?? {});
+  });
 });
 
 chrome.runtime.onInstalled.addListener(async () => {
