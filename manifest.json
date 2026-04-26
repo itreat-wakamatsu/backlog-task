@@ -53,7 +53,7 @@
     "default_path": "sidepanel.html"
   },
   "commands": {
-    "open-task-form": {
+    "_execute_action": {
       "suggested_key": {
         "default": "Ctrl+Shift+L",
         "mac": "Command+Shift+L"

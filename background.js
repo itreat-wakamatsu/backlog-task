@@ -7,8 +7,7 @@ import {
   applyOpenInPopupSetting,
   setupContextMenus,
   onContextMenuClick,
-  setupActionClick,
-  setupCommands
+  setupActionClick
 } from "./js/background/ui.js";
 import { setupMessageListeners } from "./js/background/messages.js";
 
@@ -55,7 +54,6 @@ setupMessageListeners();
 chrome.contextMenus.onClicked.addListener(onContextMenuClick);
 
 setupActionClick(getSelectionFromTab);
-setupCommands(getSelectionFromTab);
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   chrome.storage.local.get([SIDE_PANEL_OPEN_KEY]).then((obj) => {
